@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.jalagar.kang_image_picker">
+    <application>
+        <activity
+            android:name="com.app.imagepickerlibrary.ui.activity.ImagePickerActivity"
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/SSImagePicker" />
+    </application>
+</manifest>
