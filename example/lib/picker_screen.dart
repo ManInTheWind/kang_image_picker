@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kang_image_picker/kang_image_picker.dart';
+import 'package:kang_image_picker/model/video_selected_result.dart';
 import 'package:video_player/video_player.dart';
 
 class PickerScreen extends StatefulWidget {
@@ -19,12 +20,20 @@ class _PickerScreenState extends State<PickerScreen> {
 
   final List<FileImage> _selectedImageList = [];
   final List<String> _selectedImagePathList = [];
+  VideoSelectedResult? _selectedVideoResult;
   VideoPlayerController? _playerController;
 
   @override
   void initState() {
     super.initState();
     getPlatformVersion();
+  }
+
+  @override
+  void dispose() {
+    _playerController?.dispose();
+    _playerController = null;
+    super.dispose();
   }
 
   void getPlatformVersion() async {
@@ -94,15 +103,18 @@ class _PickerScreenState extends State<PickerScreen> {
     try {
       await _playerController?.dispose();
       _playerController = null;
-      final path = await KangImagePicker.selectVideo();
-      if (path == null) {
-        print('结果为空');
+      _selectedVideoResult = await KangImagePicker.selectVideo();
+      print('视频选择结果：$_selectedVideoResult');
+      if (_selectedVideoResult == null) {
         return;
       }
-      _selectedImagePathList.add(path);
-      _playerController = VideoPlayerController.file(File(path));
+
+      _playerController = VideoPlayerController.file(File(
+        _selectedVideoResult!.videoPath,
+      ));
       await _playerController!.initialize();
       setState(() {});
+      await _playerController!.play();
     } on PlatformException catch (e) {
       print('出错了，${e}');
     }
@@ -115,8 +127,11 @@ class _PickerScreenState extends State<PickerScreen> {
         title: Text('Kang Picker ${_version ?? ''}'),
         actions: [
           TextButton.icon(
-            onPressed: () {
+            onPressed: () async {
+              await _playerController?.dispose();
               setState(() {
+                _playerController = null;
+                _selectedVideoResult = null;
                 _selectedImagePathList.clear();
                 _selectedImageList.clear();
               });
@@ -159,6 +174,7 @@ class _PickerScreenState extends State<PickerScreen> {
           if (_selectedImageList.isNotEmpty) _buildSelectedAssetsListView(),
           if (_playerController != null) _buildVideoPlayView(),
           if (_selectedImagePathList.isNotEmpty) _buildSuccessPathListView(),
+          if (_selectedVideoResult != null) _buildVideoResultView(),
         ],
       ),
     );
@@ -175,6 +191,34 @@ class _PickerScreenState extends State<PickerScreen> {
       child: Text(
         label,
         style: const TextStyle(fontSize: 16),
+      ),
+    );
+  }
+
+  Widget _buildVideoResultView() {
+    Widget? leading;
+    if (_selectedVideoResult!.thumbnailPath != null) {
+      leading = Image.file(File(_selectedVideoResult!.thumbnailPath!));
+      double aspectRatio = 1.0;
+      if (_selectedVideoResult!.thumbnailWidth != null &&
+          _selectedVideoResult!.thumbnailHeight != null) {
+        aspectRatio = _selectedVideoResult!.thumbnailWidth! /
+            _selectedVideoResult!.thumbnailHeight!;
+      }
+      leading = AspectRatio(
+        aspectRatio: aspectRatio,
+        child: leading,
+      );
+    }
+    return Flexible(
+      child: ListTile(
+        leading: leading,
+        title: SelectableText(
+          _selectedVideoResult!.toString(),
+          style: const TextStyle(
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }
@@ -204,9 +248,69 @@ class _PickerScreenState extends State<PickerScreen> {
 
   Widget _buildVideoPlayView() {
     return Flexible(
-      child: AspectRatio(
-        aspectRatio: _playerController!.value.aspectRatio,
-        child: VideoPlayer(_playerController!),
+      flex: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: AspectRatio(
+          aspectRatio: _playerController!.value.aspectRatio,
+          child: Stack(
+            children: [
+              VideoPlayer(_playerController!),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ValueListenableBuilder<VideoPlayerValue>(
+                    valueListenable: _playerController!,
+                    builder: (_, VideoPlayerValue value, child) {
+                      print('value:$value');
+                      final second = value.position.inSeconds.round();
+                      return Text(
+                        '00:${second < 10 ? '0$second' : second}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () async {
+                  if (_playerController?.value.isPlaying ?? false) {
+                    await _playerController?.pause();
+                    setState(() {});
+                  } else {
+                    await _playerController?.play();
+                    setState(() {});
+                  }
+                },
+                child: SizedBox.expand(
+                  child: ValueListenableBuilder<VideoPlayerValue>(
+                    valueListenable: _playerController!,
+                    builder: (_, value, __) {
+                      return ColoredBox(
+                        color: value.isPlaying
+                            ? Colors.transparent
+                            : Colors.black38,
+                        child: value.isPlaying
+                            ? null
+                            : Center(
+                                child: Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

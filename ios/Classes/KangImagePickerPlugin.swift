@@ -348,8 +348,6 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         /* 选择videoCompression。默认为AVAssetExportPresetHighestQuality */
         config.video.compression = AVAssetExportPresetPassthrough
-        /* 选择recordingSizeLimit。如果没有设置，则限制是时间。*/
-        // config.video.recordingSizeLimit = 10000000
 
         /* Defines the name of the album when saving pictures in the user's photo library.
          In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName" */
@@ -372,7 +370,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         config.library.minWidthForItem = UIScreen.main.bounds.width * 0.8
 
         /* 定义记录视频的时间限制。默认为30秒。 */
-        config.video.recordingTimeLimit = 30.0
+        config.video.recordingTimeLimit = 20.0
+        config.video.trimmerMaxDuration = 20.0
 
         /* Defines the time limit for videos from the library.
          Defaults to 60 seconds. */
@@ -420,63 +419,30 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         /* Multiple media implementation */
         picker.didFinishPicking { [weak picker] items, cancelled in
-
             if cancelled {
                 print("Picker was canceled")
                 result(self.getFlutterCancelError())
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
+            var resultMap = [String: Any]()
 
-            let thumbnailImage: UIImage? = items.singleVideo?.thumbnail
-
-            /// file:///private/var/mobile/Containers/Data/Application/95B7E022-6A7D-4083-83E9-BD897A100BE0/tmp/51FE6CF9-6FB1-426E-A938-4610664EE907.mov
-
-            let assetURL = items.singleVideo!.url
-
-            if #available(iOS 16.0, *) {
-                result(assetURL.path())
-            } else {
-                // Fallback on earlier versions
-                result(assetURL.path)
+            if let result = self.saveImage(items.singleVideo!.thumbnail) {
+                resultMap["thumbnailPath"] = result.0
+                resultMap["thumbnailWidth"] = result.1
+                resultMap["thumbnailHeight"] = result.2
             }
+            resultMap["duration"] = 20.0
+            /// file:///private/var/mobile/Containers/Data/Application/95B7E022-6A7D-4083-83E9-BD897A100BE0/tmp/51FE6CF9-6FB1-426E-A938-4610664EE907.mov
+            let assetURL = items.singleVideo!.url
+            if #available(iOS 16.0, *) {
+                resultMap["videoPath"] = assetURL.path()
+            } else {
+                resultMap["videoPath"] = assetURL.path
+            }
+            result(resultMap)
 
-//            let playerVC = AVPlayerViewController()
-//
-//            let player = AVPlayer(playerItem: AVPlayerItem(url: assetURL))
-//
-//            playerVC.player = player
-//
-//            picker?.dismiss(animated: true, completion: { [weak self] in
-//
-//                vc?.present(playerVC, animated: true, completion: nil)
-//
-//                print("😀 \(String(describing: assetURL))")
-//            })
-
-//            picker?.dismiss(animated: true)
-//
-//            guard let video:YPMediaVideo =  items.singleVideo else{
-//                result(self.getFlutterSelectedButNotFoundError())
-//                return
-//            }
-//
-//            guard let videoAsset:PHAsset = video.asset else {
-//                result(self.getFlutterSelectedButNotFoundError())
-//                return
-//            }
-//
-//            videoAsset.getURL { responseURL in
-//                if responseURL == nil {
-//                    result(self.getFlutterSelectedButNotFoundError())
-//                    return
-//                }
-//                if #available(iOS 16.0, *) {
-//                    result(responseURL?.path())
-//                } else {
-//                    result(responseURL?.path)
-//                }
-//            }
+            picker?.dismiss(animated: true, completion: nil)
         }
 
         vc!.present(picker, animated: true, completion: nil)
@@ -518,6 +484,35 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         }
 
         return resultAsset
+    }
+
+    func saveImage(_ image: UIImage) -> (String, CGFloat, CGFloat)? {
+        // 获取当前时间作为文件名
+        let date = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMddHHmmss"
+        let filename = formatter.string(from: date)
+
+        // 获取Documents目录路径
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
+
+        // 拼接文件路径
+        let filePath = "\(documentsPath)/\(filename).jpg"
+
+        // 保存图片
+        do {
+            try image.jpegData(compressionQuality: 0.8)?.write(to: URL(fileURLWithPath: filePath))
+        } catch {
+            print("Error saving image: \(error.localizedDescription)")
+            return nil
+        }
+
+        // 获取图片宽度和高度
+        let width: CGFloat = image.size.width
+        let height: CGFloat = image.size.height
+
+        // 返回路径、宽度和高度信息
+        return (filePath, width, height)
     }
 
     func getCurrentViewController(base: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {
