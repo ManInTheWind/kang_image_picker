@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'picker_screen.dart';
 
@@ -14,6 +15,11 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       title: 'Kang Image Picker',
       home: PickerScreen(),
+      localizationsDelegates: [
+        GlobalWidgetsLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
     );
   }
 }

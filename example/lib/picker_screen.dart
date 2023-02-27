@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:core';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:kang_image_picker/kang_image_picker.dart';
 
 class PickerScreen extends StatefulWidget {
@@ -14,6 +16,9 @@ class PickerScreen extends StatefulWidget {
 class _PickerScreenState extends State<PickerScreen> {
   String? _version;
 
+  final List<FileImage> _selectedImageList = [];
+  final List<String> _selectedImagePathList = [];
+
   @override
   void initState() {
     super.initState();
@@ -25,11 +30,6 @@ class _PickerScreenState extends State<PickerScreen> {
     if (_version != null) {
       setState(() {});
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   Future<void> _callPicker() async {}
@@ -56,27 +56,73 @@ class _PickerScreenState extends State<PickerScreen> {
     );
   }
 
-  void initSdk() async {
-    await KangImagePicker.openPicker();
+  void selectOne() async {
+    try {
+      final path = await KangImagePicker.selectSinglePhoto();
+      if (path == null) {
+        print('结果为空');
+        return;
+      }
+      _selectedImagePathList.add(path);
+      _selectedImageList.add(FileImage(File(path)));
+      setState(() {});
+    } on PlatformException catch (e) {
+      print('出错了，${e}');
+    }
   }
 
-  void uploadSingle() async {}
+  void selectMulti() async {
+    try {
+      final res = await KangImagePicker.selectMultiPhotos();
+      if (res == null) {
+        print('结果为空');
+        return;
+      }
+      for (final String path in res) {
+        _selectedImagePathList.add(path);
+        _selectedImageList.add(FileImage(File(path)));
+      }
+      setState(() {});
+    } on PlatformException catch (e) {
+      print('出错了，${e}');
+    }
+  }
 
-  void uploadMultiSync() async {}
-
-  void uploadAvatarWithCallbackSync() async {}
-
-  void uploadPostWithCallbackSync() async {}
-
-  void uploadTopicWithCallbackSync() async {}
-
-  void uploadFeedbackWithCallbackSync() async {}
+  void selectVideo() async {
+    try {
+      final path = await KangImagePicker.selectVideo();
+      if (path == null) {
+        print('结果为空');
+        return;
+      }
+      _selectedImagePathList.add(path);
+      _selectedImageList.add(FileImage(File(path)));
+      setState(() {});
+    } on PlatformException catch (e) {
+      print('出错了，${e}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Kang Picker ${_version ?? ''}'),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _selectedImagePathList.clear();
+                _selectedImageList.clear();
+              });
+            },
+            icon: const Icon(Icons.clear),
+            label: Text('清除图片'),
+            style: const ButtonStyle(
+              foregroundColor: MaterialStatePropertyAll(Colors.white),
+            ),
+          ),
+        ],
       ),
       body: Flex(
         direction: Axis.vertical,
@@ -89,12 +135,24 @@ class _PickerScreenState extends State<PickerScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _button('选择图片', initSdk, color: Colors.pinkAccent),
+                    Column(
+                      children: [
+                        _button('选择单个图片', selectOne, color: Colors.pinkAccent),
+                        _button(
+                          '选择多个图片',
+                          selectMulti,
+                          color: Colors.indigoAccent,
+                        ),
+                        _button('选择视频', selectVideo, color: Colors.greenAccent),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
           ),
+          if (_selectedImageList.isNotEmpty) _buildSelectedAssetsListView(),
+          if (_selectedImagePathList.isNotEmpty) _buildSuccessPathListView(),
         ],
       ),
     );
@@ -115,100 +173,83 @@ class _PickerScreenState extends State<PickerScreen> {
     );
   }
 
-  // Widget _buildSuccessPathListView() {
-  //   return Flexible(
-  //     child: ListView.separated(
-  //       shrinkWrap: true,
-  //       itemBuilder: (_, int index) {
-  //         final path = _uploadSuccessPathList.elementAt(index);
-  //         return ListTile(
-  //           title: SelectableText(
-  //             '${index + 1} - $path',
-  //             style: const TextStyle(
-  //               fontSize: 14,
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //       itemCount: _uploadSuccessPathList.length,
-  //       separatorBuilder: (BuildContext context, int index) {
-  //         return const Divider();
-  //       },
-  //     ),
-  //   );
-  // }
+  Widget _buildSuccessPathListView() {
+    return Flexible(
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemBuilder: (_, int index) {
+          final path = _selectedImagePathList.elementAt(index);
+          return ListTile(
+            title: SelectableText(
+              '${index + 1} - $path',
+              style: const TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          );
+        },
+        itemCount: _selectedImagePathList.length,
+        separatorBuilder: (BuildContext context, int index) {
+          return const Divider();
+        },
+      ),
+    );
+  }
+
   //
-  // Widget _buildSelectedAssetsListView() {
-  //   return Flexible(
-  //     child: GridView.builder(
-  //       shrinkWrap: true,
-  //       physics: const BouncingScrollPhysics(),
-  //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-  //       itemCount: selectedAssets.length,
-  //       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-  //         crossAxisCount: 3,
-  //       ),
-  //       itemBuilder: (BuildContext _, int index) {
-  //         final AssetEntity asset = selectedAssets.elementAt(index);
-  //         final double? process = _uploadProcess?.elementAt(index)['process'];
-  //         final bool shouldHide = process != null && process >= 1.0;
-  //         // print('process:$process');
-  //         // print('shouldShowProcess:$shouldShowProcess');
-  //         return Padding(
-  //           padding: const EdgeInsets.symmetric(
-  //             horizontal: 8.0,
-  //             vertical: 16.0,
-  //           ),
-  //           child: Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               Expanded(
-  //                 child: Stack(
-  //                   alignment: Alignment.center,
-  //                   clipBehavior: Clip.none,
-  //                   children: [
-  //                     RepaintBoundary(
-  //                       child: ClipRRect(
-  //                         borderRadius: BorderRadius.circular(8.0),
-  //                         child: Image(image: AssetEntityImageProvider(asset)),
-  //                       ),
-  //                     ),
-  //                     Positioned(
-  //                       right: -8.0,
-  //                       top: -8.0,
-  //                       child: IconButton(
-  //                         onPressed: () {
-  //                           setState(() {
-  //                             selectedAssets.removeAt(index);
-  //                             _uploadProcess?.removeAt(index);
-  //                           });
-  //                         },
-  //                         icon: Icon(Icons.cancel),
-  //                         iconSize: 18,
-  //                         color: Colors.pinkAccent,
-  //                         padding: EdgeInsets.all(0.0),
-  //                         alignment: Alignment.topRight,
-  //                       ),
-  //                     )
-  //                   ],
-  //                 ),
-  //               ),
-  //               const SizedBox(
-  //                 height: 5.0,
-  //               ),
-  //               LinearProgressIndicator(
-  //                 color: Colors.pinkAccent,
-  //                 value: process,
-  //                 minHeight: 3.0,
-  //                 backgroundColor: Colors.white70,
-  //               )
-  //             ],
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
+  Widget _buildSelectedAssetsListView() {
+    return Flexible(
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        itemCount: _selectedImageList.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+        ),
+        itemBuilder: (BuildContext _, int index) {
+          final FileImage asset = _selectedImageList.elementAt(index);
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8.0,
+              vertical: 16.0,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                RepaintBoundary(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image(
+                      image: asset,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: -8.0,
+                  top: -8.0,
+                  child: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedImageList.removeAt(index);
+                      });
+                    },
+                    icon: Icon(Icons.cancel),
+                    iconSize: 18,
+                    color: Colors.pinkAccent,
+                    padding: EdgeInsets.all(0.0),
+                    alignment: Alignment.topRight,
+                  ),
+                )
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   String strToBase64(String str) {
     //base64编码 - 转utf8
