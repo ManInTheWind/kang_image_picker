@@ -4,17 +4,12 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.annotation.ChecksSdkIntAtLeast
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import com.app.imagepickerlibrary.ImagePicker
 import com.app.imagepickerlibrary.ImagePicker.Companion.registerImagePicker
 import com.app.imagepickerlibrary.listener.ImagePickerResultListener
 import com.app.imagepickerlibrary.model.PickExtension
 import com.app.imagepickerlibrary.model.PickerType
-import io.flutter.embedding.android.FlutterFragmentActivity
-
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
@@ -35,12 +30,11 @@ class KangImagePickerPlugin : FlutterPlugin, MethodCallHandler,
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
 
-    private lateinit var binding: FlutterPluginBinding
-
-    ///TODO:注册ImagePicker
     private var imagePicker: ImagePicker? = null
 
     private var pickerOptions = PickerOptions.default()
+
+    private var callback: Result? = null
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "kang_image_picker")
@@ -58,11 +52,9 @@ class KangImagePickerPlugin : FlutterPlugin, MethodCallHandler,
 
     }
 
-    ///TODO:选择单个图片
     private fun selectSinglePhoto(result: Result) {
-
         if (imagePicker == null) {
-            result.error("-1", "打开失败，ImagePicker未初始化", null)
+            result.error("-1", "打开失败，ImagePicker未初始化 请检查Activity是否为ComponentActivity", null)
             return
         }
         imagePicker!!
@@ -80,15 +72,16 @@ class KangImagePickerPlugin : FlutterPlugin, MethodCallHandler,
             imagePicker!!.systemPicker(false)
         }
         imagePicker!!.open(PickerType.GALLERY)
-        result.success(true)
+        callback = result
     }
 
     ///TODO:选择多个图片
-    private fun selectMultiPhotos(result: Result){
+    private fun selectMultiPhotos(result: Result) {
 
     }
+
     ///TODO:选择视频
-    private fun selectVideo(result: Result){
+    private fun selectVideo(result: Result) {
 
     }
 
@@ -98,24 +91,33 @@ class KangImagePickerPlugin : FlutterPlugin, MethodCallHandler,
 
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-
+        if (binding.activity is ComponentActivity) {
+            imagePicker = (binding.activity as ComponentActivity).registerImagePicker(this)
+        }
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        onAttachedToActivity(binding)
     }
 
     override fun onDetachedFromActivity() {
     }
 
     override fun onImagePick(uri: Uri?) {
+        callback?.success(arrayListOf(uri.toString()))
     }
 
     override fun onMultiImagePick(uris: List<Uri>?) {
+        val urls = uris?.map {
+            it.toString()
+        }
+        if (urls != null) {
+            callback?.success(urls)
+        }
     }
-
 
 }
 
