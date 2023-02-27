@@ -37,6 +37,7 @@ class KangImagePickerPlugin : FlutterPlugin, MethodCallHandler,
 
     private lateinit var binding: FlutterPluginBinding
 
+    ///TODO:注册ImagePicker
     private var imagePicker: ImagePicker? = null
 
     private var pickerOptions = PickerOptions.default()
@@ -49,14 +50,16 @@ class KangImagePickerPlugin : FlutterPlugin, MethodCallHandler,
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "getPlatformVersion" -> result.success("Android ${android.os.Build.VERSION.RELEASE}")
-            "openPicker" -> openPicker(result)
+            "selectSinglePhoto" -> selectSinglePhoto(result)
+            "selectMultiPhotos" -> selectMultiPhotos(result)
+            "selectVideo" -> selectVideo(result)
             else -> result.notImplemented()
         }
 
     }
 
-
-    private fun openPicker(result: Result) {
+    ///TODO:选择单个图片
+    private fun selectSinglePhoto(result: Result) {
 
         if (imagePicker == null) {
             result.error("-1", "打开失败，ImagePicker未初始化", null)
@@ -78,6 +81,15 @@ class KangImagePickerPlugin : FlutterPlugin, MethodCallHandler,
         }
         imagePicker!!.open(PickerType.GALLERY)
         result.success(true)
+    }
+
+    ///TODO:选择多个图片
+    private fun selectMultiPhotos(result: Result){
+
+    }
+    ///TODO:选择视频
+    private fun selectVideo(result: Result){
+
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
