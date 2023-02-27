@@ -69,7 +69,6 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         /* 定义保存图片到用户的照片库中的相册名称。通常是您的应用程序名称。默认为“DefaultYPImagePickerAlbumName” */
         let albumName = Bundle.main.infoDictionary!["CFBundleName"] as! String
         config.albumName = albumName
-        config.showsPhotoFilters = true
 
         /* 定义启动时显示哪个屏幕。只有在`showsVideo = true`时才会使用视频模式。默认值为`.photo` */
         config.startOnScreen = .library
@@ -145,39 +144,33 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
             switch selectedPhoto {
             case .photo(p: let photo):
-
                 print("\(String(describing: photo.asset))")
                 print("\(photo.fromCamera)")
                 print("\(String(describing: photo.url))")
                 print("\(String(describing: photo.exifMeta))")
                 print("\(String(describing: photo.image))")
-
                 if photo.fromCamera, photo.asset == nil {
-                    let fetchAsset: PHAsset? = self.getPHAsset(for: photo.originalImage, inAlbumNamed: albumName)
-                    print("🥹 找到了\(String(describing: fetchAsset))")
-                    if let modifiedImage = photo.modifiedImage {
-                        let fetchAsset1: PHAsset? = self.getPHAsset(for: modifiedImage, inAlbumNamed: albumName)
-                        print("🥹 找到了1 \(String(describing: fetchAsset1))")
-                    }
-                    let fetchAsset2: PHAsset? = self.getPHAsset(for: photo.image, inAlbumNamed: albumName)
-                    print("🥹 找到了2 \(String(describing: fetchAsset2))")
-                    if fetchAsset == nil {
-                        result(self.getFlutterDefaultError(msg: "无法找到用户选择的图片"))
-                    } else {
-                        fetchAsset!.getURL(completionHandler: { (responseURL: URL?) in
-                            if responseURL == nil {
-                                result(self.getFlutterDefaultError(msg: "无法找到用户选择的图片"))
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        let resultInAlbum = self.getPHAsset(inAlbumNamed: albumName)
+                        if resultInAlbum == nil {
+                            result(self.getFlutterDefaultError(msg: "无法找到用户选择的图片"))
+                        } else {
+                            resultInAlbum!.getURL(completionHandler: { (responseURL: URL?) in
+                                if responseURL == nil {
+                                    result(self.getFlutterDefaultError(msg: "无法找到用户选择的图片"))
 
-                            } else {
-                                if #available(iOS 16.0, *) {
-                                    result(responseURL!.path())
                                 } else {
-                                    result(responseURL!.path)
+                                    if #available(iOS 16.0, *) {
+                                        result(responseURL!.path())
+                                    } else {
+                                        result(responseURL!.path)
+                                    }
                                 }
-                            }
 
-                        })
+                            })
+                        }
                     }
+
                 } else if photo.asset == nil {
                     result(self.getFlutterDefaultError(msg: "无法找到用户选择的图片"))
                 } else {
@@ -348,7 +341,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         /* Choose what media types are available in the library. Defaults to `.photo` */
         /* 选择库中可用的媒体类型。默认为.photo */
-        config.library.mediaType = .photoAndVideo
+        config.library.mediaType = .video
         config.library.itemOverlayType = .grid
         config.showsPhotoFilters = false
         /* 允许您选择退出保存新图像（或旧图像但经过滤处理）到用户的照片库中。默认为true。 */
@@ -369,10 +362,10 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
          Default value is `.photo` */
         /* 定义启动时显示哪个屏幕。只有在`showsVideo = true`时才会使用视频模式。默认值为`.photo` */
 
-        config.startOnScreen = .video
+        config.startOnScreen = .library
 
         /* 定义启动时显示哪些屏幕以及它们的顺序。默认值为`[.library, .photo]` */
-        config.screens = [.video, .library]
+        config.screens = [.library, .video]
 
         /* Can forbid the items with very big height with this property */
         /* 可以使用此属性禁止具有非常大高度的项 */
@@ -441,18 +434,25 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
             let assetURL = items.singleVideo!.url
 
-            let playerVC = AVPlayerViewController()
+            if #available(iOS 16.0, *) {
+                result(assetURL.path())
+            } else {
+                // Fallback on earlier versions
+                result(assetURL.path)
+            }
 
-            let player = AVPlayer(playerItem: AVPlayerItem(url: assetURL))
-
-            playerVC.player = player
-
-            picker?.dismiss(animated: true, completion: { [weak self] in
-
-                vc?.present(playerVC, animated: true, completion: nil)
-
-                print("😀 \(String(describing: assetURL))")
-            })
+//            let playerVC = AVPlayerViewController()
+//
+//            let player = AVPlayer(playerItem: AVPlayerItem(url: assetURL))
+//
+//            playerVC.player = player
+//
+//            picker?.dismiss(animated: true, completion: { [weak self] in
+//
+//                vc?.present(playerVC, animated: true, completion: nil)
+//
+//                print("😀 \(String(describing: assetURL))")
+//            })
 
 //            picker?.dismiss(animated: true)
 //
@@ -482,29 +482,41 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         vc!.present(picker, animated: true, completion: nil)
     }
 
-    func getPHAsset(for image: UIImage, inAlbumNamed albumName: String) -> PHAsset? {
+    func getPHAsset(inAlbumNamed albumName: String) -> PHAsset? {
         var resultAsset: PHAsset?
-        let options = PHFetchOptions()
-        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        // 查询所有系统相册
+        let smartAlbums = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .albumRegular, options: nil)
+        let userAlbums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
 
-        let albumFetchResult: PHFetchResult<PHAssetCollection> = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
-        albumFetchResult.enumerateObjects { assetCollection, _, stop in
-            if assetCollection.localizedTitle == albumName {
-                let assets = PHAsset.fetchAssets(in: assetCollection, options: options)
-                assets.enumerateObjects { asset, _, stop in
-                    let requestOptions = PHImageRequestOptions()
-                    requestOptions.isSynchronous = true
-                    requestOptions.deliveryMode = .highQualityFormat
-
-                    PHImageManager.default().requestImageData(for: asset, options: requestOptions) { imageData, _, _, _ in
-                        if let imageData = imageData, let checkImage = UIImage(data: imageData), checkImage == image {
-                            resultAsset = asset
-                            stop.pointee = true
-                        }
-                    }
+        // 遍历所有相册，查找指定名称的相册
+        var targetAlbum: PHAssetCollection?
+        smartAlbums.enumerateObjects { album, _, _ in
+            if album.localizedTitle == albumName {
+                targetAlbum = album
+            }
+        }
+        if targetAlbum == nil {
+            userAlbums.enumerateObjects { album, _, _ in
+                if album.localizedTitle == albumName {
+                    targetAlbum = album
                 }
             }
         }
+
+        if let targetAlbum = targetAlbum {
+            let fetchOptions = PHFetchOptions()
+            fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            /// 查询
+            let result = PHAsset.fetchAssets(in: targetAlbum, options: fetchOptions)
+            if let asset = result.firstObject {
+                resultAsset = asset
+                print("查询到的最新照片PHAsset对象为：\(String(describing: resultAsset))")
+
+            } else {
+                print("查询到的最新照片PHAsset对象为：\(String(describing: resultAsset))")
+            }
+        }
+
         return resultAsset
     }
 

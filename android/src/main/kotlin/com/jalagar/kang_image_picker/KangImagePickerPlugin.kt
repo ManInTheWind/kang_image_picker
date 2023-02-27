@@ -91,9 +91,7 @@ class KangImagePickerPlugin : FlutterPlugin, MethodCallHandler,
 
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        if (binding.activity is ComponentActivity) {
-            imagePicker = (binding.activity as ComponentActivity).registerImagePicker(this)
-        }
+
     }
 
     override fun onDetachedFromActivityForConfigChanges() {

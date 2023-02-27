@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kang_image_picker/kang_image_picker.dart';
+import 'package:video_player/video_player.dart';
 
 class PickerScreen extends StatefulWidget {
   const PickerScreen({super.key});
@@ -18,6 +19,7 @@ class _PickerScreenState extends State<PickerScreen> {
 
   final List<FileImage> _selectedImageList = [];
   final List<String> _selectedImagePathList = [];
+  VideoPlayerController? _playerController;
 
   @override
   void initState() {
@@ -90,13 +92,16 @@ class _PickerScreenState extends State<PickerScreen> {
 
   void selectVideo() async {
     try {
+      await _playerController?.dispose();
+      _playerController = null;
       final path = await KangImagePicker.selectVideo();
       if (path == null) {
         print('结果为空');
         return;
       }
       _selectedImagePathList.add(path);
-      _selectedImageList.add(FileImage(File(path)));
+      _playerController = VideoPlayerController.file(File(path));
+      await _playerController!.initialize();
       setState(() {});
     } on PlatformException catch (e) {
       print('出错了，${e}');
@@ -152,6 +157,7 @@ class _PickerScreenState extends State<PickerScreen> {
             ),
           ),
           if (_selectedImageList.isNotEmpty) _buildSelectedAssetsListView(),
+          if (_playerController != null) _buildVideoPlayView(),
           if (_selectedImagePathList.isNotEmpty) _buildSuccessPathListView(),
         ],
       ),
@@ -192,6 +198,15 @@ class _PickerScreenState extends State<PickerScreen> {
         separatorBuilder: (BuildContext context, int index) {
           return const Divider();
         },
+      ),
+    );
+  }
+
+  Widget _buildVideoPlayView() {
+    return Flexible(
+      child: AspectRatio(
+        aspectRatio: _playerController!.value.aspectRatio,
+        child: VideoPlayer(_playerController!),
       ),
     );
   }
