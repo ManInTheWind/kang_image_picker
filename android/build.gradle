@@ -70,6 +70,19 @@ android {
 
 dependencies {
     compileOnly files("$flutterRoot/bin/cache/artifacts/engine/android-arm/flutter.jar")
-    implementation 'com.github.SimformSolutionsPvtLtd:SSImagePicker:2.0'
     api 'androidx.appcompat:appcompat:1.5.1'
+    // PictureSelector 基础 (必须)
+    implementation 'io.github.lucksiege:pictureselector:v3.10.7'
+
+    // 图片压缩 (按需引入)
+    implementation 'io.github.lucksiege:compress:v3.10.7'
+
+    // 图片裁剪 (按需引入)
+    implementation 'io.github.lucksiege:ucrop:v3.10.7'
+
+    // 自定义相机 (按需引入)
+    implementation 'io.github.lucksiege:camerax:v3.10.7'
+
+    implementation "com.github.bumptech.glide:glide:4.13.2"
+
 }
