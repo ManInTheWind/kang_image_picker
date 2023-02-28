@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:kang_image_picker/model/picker_configuration.dart';
 import 'package:kang_image_picker/model/video_selected_result.dart';
 
 class KangImagePicker {
@@ -9,18 +10,32 @@ class KangImagePicker {
   }
 
   ///返回文件路径
-  static Future<String?> selectSinglePhoto() async {
-    return await _methodChannel.invokeMethod<String?>('selectSinglePhoto');
+  static Future<String?> selectSinglePhoto({
+    PickerConfiguration configuration = const PickerConfiguration(),
+  }) async {
+    return await _methodChannel.invokeMethod<String?>(
+      'selectSinglePhoto',
+      configuration.toJson(),
+    );
   }
 
-  static Future<List<String>?> selectMultiPhotos() async {
-    final res =
-        await _methodChannel.invokeMethod<List<Object?>>('selectMultiPhotos');
+  static Future<List<String>?> selectMultiPhotos({
+    PickerConfiguration configuration = const PickerConfiguration(),
+  }) async {
+    final res = await _methodChannel.invokeMethod<List<Object?>>(
+      'selectMultiPhotos',
+      configuration.toJson(),
+    );
     return res?.map((e) => e as String).toList();
   }
 
-  static Future<VideoSelectedResult?> selectVideo() async {
-    final result = await _methodChannel.invokeMethod<Object?>('selectVideo');
+  static Future<VideoSelectedResult?> selectVideo({
+    PickerConfiguration configuration = const PickerConfiguration(),
+  }) async {
+    final result = await _methodChannel.invokeMethod<Object?>(
+      'selectVideo',
+      configuration.toJson(),
+    );
     VideoSelectedResult? videoSelectedResult;
     if (result != null && result is Map) {
       videoSelectedResult = VideoSelectedResult(

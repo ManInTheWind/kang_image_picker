@@ -1,6 +1,6 @@
 enum PickerMediaType { photo, video, photoAndVideo }
 
-enum PickerScreen {
+enum PickerScreenEnum {
   ///相册
   library,
 
@@ -19,10 +19,10 @@ class PickerConfiguration {
   final bool showsPhotoFilters;
 
   ///定义启动时显示哪个屏幕。只有在`showsVideo = true`时才会使用视频模式。默认值为`.photo`
-  final PickerScreen startOnScreen;
+  final PickerScreenEnum startOnScreen;
 
   ///定义启动时显示哪些屏幕以及它们的顺序。默认值为`[.library, .photo]`
-  final List<PickerScreen> screens;
+  final List<PickerScreenEnum> screens;
 
   ///是否开启裁剪，以及裁剪比例，默认.none
   final double? cropRatio;
@@ -30,15 +30,39 @@ class PickerConfiguration {
   ///主题颜色
   final String? tintColor;
 
+  ///选择数量
+  final int maxNumberOfItems;
+
+  ///定义记录视频的时间限制。默认为30秒
+  final double? videoRecordingTimeLimit;
+
+  ///视频长度。默认60秒
+  final double? trimmerMaxDuration;
+
   const PickerConfiguration({
     this.mediaType = PickerMediaType.photo,
     this.showsPhotoFilters = false,
-    this.startOnScreen = PickerScreen.library,
-    this.screens = const <PickerScreen>[
-      PickerScreen.library,
-      PickerScreen.photo
+    this.startOnScreen = PickerScreenEnum.library,
+    this.screens = const <PickerScreenEnum>[
+      PickerScreenEnum.library,
+      PickerScreenEnum.photo
     ],
     this.cropRatio,
     this.tintColor,
+    this.maxNumberOfItems = 1,
+    this.videoRecordingTimeLimit,
+    this.trimmerMaxDuration,
   });
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'mediaType': mediaType.index,
+        'showsPhotoFilters': showsPhotoFilters,
+        'startOnScreen': startOnScreen.index,
+        'screens': screens.map((e) => e.index).toList(),
+        'cropRatio': cropRatio,
+        'tintColor': tintColor,
+        'maxNumberOfItems': maxNumberOfItems,
+        'videoRecordingTimeLimit': videoRecordingTimeLimit,
+        'trimmerMaxDuration': trimmerMaxDuration,
+      }..removeWhere((key, value) => value == null);
 }

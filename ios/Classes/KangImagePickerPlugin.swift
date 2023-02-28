@@ -9,6 +9,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 //    private var FLUTTER_CANCEL_CODE: String = "-2"
 //    private var FLUTTER_SELECTED_BUT_NOT_FOUND_CODE: String = "-2"
 
+    private var selectedItems: [YPMediaItem]?
+
     public func noPhotos() {
         // PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
     }
@@ -26,11 +28,11 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "selectSinglePhoto":
-            selectSinglePhoto(result)
+            selectSinglePhoto(arguments: call.arguments, result)
         case "selectMultiPhotos":
-            selectMultiPhotos(result)
+            selectMultiPhotos(arguments: call.arguments, result)
         case "selectVideo":
-            selectVideo(result)
+            selectVideo(arguments: call.arguments, result)
         case "getPlatformVersion":
             result("iOS " + UIDevice.current.systemVersion)
         default:
@@ -38,7 +40,14 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         }
     }
 
-    func selectSinglePhoto(_ result: @escaping FlutterResult) {
+    func selectSinglePhoto(arguments: Any?, _ result: @escaping FlutterResult) {
+        var flutterPickConfiguration: FlutterPickerConfiguration
+        if let arguments = arguments as? [String: Any?] {
+            flutterPickConfiguration = FlutterPickerConfiguration(dict: arguments)
+        } else {
+            flutterPickConfiguration = FlutterPickerConfiguration()
+        }
+
         var config = YPImagePickerConfiguration()
         let vc = getCurrentViewController()
         if vc == nil {
@@ -47,11 +56,11 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         }
         /* Choose what media types are available in the library. Defaults to `.photo` */
         /* 选择库中可用的媒体类型。默认为.photo */
-        config.library.mediaType = .photo
+        config.library.mediaType = flutterPickConfiguration.mediaType
         config.library.itemOverlayType = .grid
         /* Adds a Filter step in the photo taking process. Defaults to true */
         /* 在拍照过程中添加滤镜步骤。默认为true */
-        config.showsPhotoFilters = false
+        config.showsPhotoFilters = flutterPickConfiguration.showsPhotoFilters
         /* 允许您选择退出保存新图像（或旧图像但经过滤处理）到用户的照片库中。默认为true。 */
         config.shouldSaveNewPicturesToAlbum = true
         config.onlySquareImagesFromCamera = false
@@ -71,20 +80,24 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         config.albumName = albumName
 
         /* 定义启动时显示哪个屏幕。只有在`showsVideo = true`时才会使用视频模式。默认值为`.photo` */
-        config.startOnScreen = .library
+        config.startOnScreen = flutterPickConfiguration.startOnScreen
 
         /* 定义启动时显示哪些屏幕以及它们的顺序。默认值为`[.library, .photo]` */
-        config.screens = [.library, .photo]
+        config.screens = flutterPickConfiguration.screens
 
         /* Can forbid the items with very big height with this property */
         /* 可以使用此属性禁止具有非常大高度的项 */
         config.library.minWidthForItem = UIScreen.main.bounds.width * 0.8
 
         /* Adds a Crop step in the photo taking process, after filters. Defaults to .none */
-        config.showsCrop = .rectangle(ratio: 4/3)
+        if let cropRatio = flutterPickConfiguration.cropRatio {
+            config.showsCrop = .rectangle(ratio: cropRatio)
+        }
 
         /* 颜色 */
-        config.colors.tintColor = "#2BD180".uicolor()
+        if let tintColor = flutterPickConfiguration.tintColor {
+            config.colors.tintColor = tintColor.uicolor()
+        }
 
         /* Defines if the status bar should be hidden when showing the picker. Default is true */
         config.hidesStatusBar = false
@@ -94,11 +107,11 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         config.maxCameraZoomFactor = 2.0
 
-        config.library.maxNumberOfItems = 1
+        config.library.maxNumberOfItems = flutterPickConfiguration.maxNumberOfItems
         config.gallery.hidesRemoveButton = false
 
         /// 选择过的
-//         config.library.preselectedItems = selectedItems
+        config.library.preselectedItems = selectedItems
 
         // Customise fonts
         // 自定义字体
@@ -135,7 +148,10 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
+
             _ = items.map { print("🧀 \($0)") }
+
+            self.selectedItems = items
 
             guard let selectedPhoto = items.first else {
                 result(self.getFlutterDefaultError(msg: "无法找到用户选择的图片"))
@@ -150,7 +166,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 print("\(String(describing: photo.exifMeta))")
                 print("\(String(describing: photo.image))")
                 if photo.fromCamera, photo.asset == nil {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                         let resultInAlbum = self.getPHAsset(inAlbumNamed: albumName)
                         if resultInAlbum == nil {
                             result(self.getFlutterDefaultError(msg: "无法找到用户选择的图片"))
@@ -198,7 +214,13 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         vc!.present(picker, animated: true, completion: nil)
     }
 
-    func selectMultiPhotos(_ result: @escaping FlutterResult) {
+    func selectMultiPhotos(arguments: Any?, _ result: @escaping FlutterResult) {
+        var flutterPickConfiguration: FlutterPickerConfiguration
+        if let arguments = arguments as? [String: Any?] {
+            flutterPickConfiguration = FlutterPickerConfiguration(dict: arguments)
+        } else {
+            flutterPickConfiguration = FlutterPickerConfiguration()
+        }
         var config = YPImagePickerConfiguration()
         let vc = getCurrentViewController()
         if vc == nil {
@@ -208,24 +230,25 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         /* Choose what media types are available in the library. Defaults to `.photo` */
         /* 选择库中可用的媒体类型。默认为.photo */
-        config.library.mediaType = .photo
+        config.library.mediaType = flutterPickConfiguration.mediaType
         config.library.itemOverlayType = .grid
         /* Adds a Filter step in the photo taking process. Defaults to true */
         /* 在拍照过程中添加滤镜步骤。默认为true */
-        config.showsPhotoFilters = false
+        config.showsPhotoFilters = flutterPickConfiguration.showsPhotoFilters
         /* 允许您选择退出保存新图像（或旧图像但经过滤处理）到用户的照片库中。默认为true。 */
         config.shouldSaveNewPicturesToAlbum = true
 
         /* Defines the name of the album when saving pictures in the user's photo library.
          In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName" */
         /* 定义保存图片到用户的照片库中的相册名称。通常是您的应用程序名称。默认为“DefaultYPImagePickerAlbumName” */
-        config.albumName = Bundle.main.infoDictionary!["CFBundleName"] as! String
+        let albumName = Bundle.main.infoDictionary!["CFBundleName"] as! String
+        config.albumName = albumName
 
         /* 定义启动时显示哪个屏幕。只有在`showsVideo = true`时才会使用视频模式。默认值为`.photo` */
-        config.startOnScreen = .library
+        config.startOnScreen = flutterPickConfiguration.startOnScreen
 
         /* 定义启动时显示哪些屏幕以及它们的顺序。默认值为`[.library, .photo]` */
-        config.screens = [.library, .photo]
+        config.screens = flutterPickConfiguration.screens
 
         /* Can forbid the items with very big height with this property */
         /* 可以使用此属性禁止具有非常大高度的项 */
@@ -233,10 +256,15 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         /* Adds a Crop step in the photo taking process, after filters. Defaults to .none */
         /* 是否开启裁剪，以及裁剪比例，默认.none */
-        config.showsCrop = .rectangle(ratio: 4/3)
+        /* Adds a Crop step in the photo taking process, after filters. Defaults to .none */
+        if let cropRatio = flutterPickConfiguration.cropRatio {
+            config.showsCrop = .rectangle(ratio: cropRatio)
+        }
 
         /* 颜色 */
-        config.colors.tintColor = "#2BD180".uicolor()
+        if let tintColor = flutterPickConfiguration.tintColor {
+            config.colors.tintColor = tintColor.uicolor()
+        }
 
         /* Defines if the status bar should be hidden when showing the picker. Default is true */
         config.hidesStatusBar = false
@@ -246,11 +274,11 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         config.maxCameraZoomFactor = 2.0
 
-        config.library.maxNumberOfItems = 9
+        config.library.maxNumberOfItems = flutterPickConfiguration.maxNumberOfItems
         config.gallery.hidesRemoveButton = false
 
         /// 选择过的
-        // config.library.preselectedItems = selectedItems
+        config.library.preselectedItems = selectedItems
 
         // Customise fonts
         // 自定义字体
@@ -288,14 +316,33 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 return
             }
 
+            self.selectedItems = items
+
             var resultFilePathList = [String]()
             let dispatchGroup = DispatchGroup()
+            let queue = DispatchQueue.global()
             for item: YPMediaItem in items {
                 dispatchGroup.enter()
                 switch item {
                 case .photo(p: let photo):
-
-                    if photo.asset == nil {
+                    if photo.fromCamera, photo.asset == nil {
+                        queue.asyncAfter(deadline: .now() + 0.8) {
+                            if let photoInAlbum = self.getPHAsset(inAlbumNamed: albumName) {
+                                photoInAlbum.getURL { responseURL in
+                                    if let url = responseURL {
+                                        if #available(iOS 16.0, *) {
+                                            resultFilePathList.append(url.path())
+                                        } else {
+                                            resultFilePathList.append(url.path)
+                                        }
+                                    }
+                                    dispatchGroup.leave()
+                                }
+                            } else {
+                                dispatchGroup.leave()
+                            }
+                        }
+                    } else if photo.asset == nil {
                         result(self.getFlutterSelectedButNotFoundError())
                         dispatchGroup.leave()
                     } else {
@@ -331,7 +378,14 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         vc!.present(picker, animated: true, completion: nil)
     }
 
-    func selectVideo(_ result: @escaping FlutterResult) {
+    func selectVideo(arguments: Any?, _ result: @escaping FlutterResult) {
+        var flutterPickConfiguration: FlutterPickerConfiguration
+        if let arguments = arguments as? [String: Any?] {
+            flutterPickConfiguration = FlutterPickerConfiguration(dict: arguments)
+        } else {
+            flutterPickConfiguration = FlutterPickerConfiguration()
+        }
+
         var config = YPImagePickerConfiguration()
         let vc = getCurrentViewController()
         if vc == nil {
@@ -341,9 +395,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         /* Choose what media types are available in the library. Defaults to `.photo` */
         /* 选择库中可用的媒体类型。默认为.photo */
-        config.library.mediaType = .video
+        config.library.mediaType = flutterPickConfiguration.mediaType
         config.library.itemOverlayType = .grid
-        config.showsPhotoFilters = false
+        config.showsPhotoFilters = flutterPickConfiguration.showsPhotoFilters
         /* 允许您选择退出保存新图像（或旧图像但经过滤处理）到用户的照片库中。默认为true。 */
 
         /* 选择videoCompression。默认为AVAssetExportPresetHighestQuality */
@@ -360,18 +414,26 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
          Default value is `.photo` */
         /* 定义启动时显示哪个屏幕。只有在`showsVideo = true`时才会使用视频模式。默认值为`.photo` */
 
-        config.startOnScreen = .library
+        config.startOnScreen = flutterPickConfiguration.startOnScreen
 
         /* 定义启动时显示哪些屏幕以及它们的顺序。默认值为`[.library, .photo]` */
-        config.screens = [.library, .video]
+        config.screens = flutterPickConfiguration.screens
 
         /* Can forbid the items with very big height with this property */
         /* 可以使用此属性禁止具有非常大高度的项 */
         config.library.minWidthForItem = UIScreen.main.bounds.width * 0.8
 
         /* 定义记录视频的时间限制。默认为30秒。 */
-        config.video.recordingTimeLimit = 20.0
-        config.video.trimmerMaxDuration = 20.0
+//        config.video.recordingTimeLimit = 20.0
+//        config.video.trimmerMaxDuration = 20.0
+
+        if let recordingTimeLimit = flutterPickConfiguration.videoRecordingTimeLimit {
+            config.video.recordingTimeLimit = recordingTimeLimit
+        }
+
+        if let trimmerMaxDuration = flutterPickConfiguration.trimmerMaxDuration {
+            config.video.trimmerMaxDuration = trimmerMaxDuration
+        }
 
         /* Defines the time limit for videos from the library.
          Defaults to 60 seconds. */
@@ -390,7 +452,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         config.wordings.videoTitle = "视频"
 
         /* 颜色 */
-        config.colors.tintColor = "#2BD180".uicolor()
+        if let tintColor = flutterPickConfiguration.tintColor {
+            config.colors.tintColor = tintColor.uicolor()
+        }
 
         /* Defines if the status bar should be hidden when showing the picker. Default is true */
         config.hidesStatusBar = false
@@ -400,9 +464,11 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         config.maxCameraZoomFactor = 2.0
 
-        config.library.maxNumberOfItems = 5
+        config.library.maxNumberOfItems = flutterPickConfiguration.maxNumberOfItems
 
         config.gallery.hidesRemoveButton = false
+
+//        config.library.preselectedItems = selectedItems
 
         let picker = YPImagePicker(configuration: config)
 
@@ -425,6 +491,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
+//            self.selectedItems = items
+
             var resultMap = [String: Any]()
 
             if let result = self.saveImage(items.singleVideo!.thumbnail) {

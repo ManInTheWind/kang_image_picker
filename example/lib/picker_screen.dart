@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kang_image_picker/kang_image_picker.dart';
+import 'package:kang_image_picker/model/picker_configuration.dart';
 import 'package:kang_image_picker/model/video_selected_result.dart';
 import 'package:video_player/video_player.dart';
 
@@ -69,7 +70,18 @@ class _PickerScreenState extends State<PickerScreen> {
 
   void selectOne() async {
     try {
-      final path = await KangImagePicker.selectSinglePhoto();
+      final path = await KangImagePicker.selectSinglePhoto(
+        configuration: const PickerConfiguration(
+          mediaType: PickerMediaType.photo,
+          showsPhotoFilters: true,
+          startOnScreen: PickerScreenEnum.library,
+          screens: [
+            PickerScreenEnum.library,
+            PickerScreenEnum.photo,
+          ],
+          cropRatio: 1 / 1,
+        ),
+      );
       if (path == null) {
         print('结果为空');
         return;
@@ -84,7 +96,19 @@ class _PickerScreenState extends State<PickerScreen> {
 
   void selectMulti() async {
     try {
-      final res = await KangImagePicker.selectMultiPhotos();
+      final res = await KangImagePicker.selectMultiPhotos(
+        configuration: const PickerConfiguration(
+          mediaType: PickerMediaType.photo,
+          showsPhotoFilters: true,
+          startOnScreen: PickerScreenEnum.photo,
+          screens: [
+            PickerScreenEnum.photo,
+            PickerScreenEnum.library,
+          ],
+          cropRatio: 16 / 9,
+          maxNumberOfItems: 9,
+        ),
+      );
       if (res == null) {
         print('结果为空');
         return;
@@ -103,7 +127,20 @@ class _PickerScreenState extends State<PickerScreen> {
     try {
       await _playerController?.dispose();
       _playerController = null;
-      _selectedVideoResult = await KangImagePicker.selectVideo();
+      _selectedVideoResult = await KangImagePicker.selectVideo(
+        configuration: const PickerConfiguration(
+          mediaType: PickerMediaType.video,
+          showsPhotoFilters: true,
+          startOnScreen: PickerScreenEnum.video,
+          screens: [
+            PickerScreenEnum.library,
+            PickerScreenEnum.video,
+          ],
+          maxNumberOfItems: 1,
+          videoRecordingTimeLimit: 30,
+          trimmerMaxDuration: 30.0,
+        ),
+      );
       print('视频选择结果：$_selectedVideoResult');
       if (_selectedVideoResult == null) {
         return;
