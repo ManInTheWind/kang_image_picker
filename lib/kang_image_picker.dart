@@ -26,7 +26,17 @@ class KangImagePicker {
       'selectMultiPhotos',
       configuration.toJson(),
     );
-    return res?.map((e) => e as String).toList();
+    if (res == null || res.isEmpty) {
+      return null;
+    }
+    List<String> paths = <String>[];
+    for (var path in res) {
+      if (path == null) {
+        continue;
+      }
+      paths.add(path as String);
+    }
+    return paths;
   }
 
   static Future<VideoSelectedResult?> selectVideo({

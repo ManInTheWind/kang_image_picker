@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:kang_image_picker/kang_image_picker.dart';
 import 'package:kang_image_picker/model/picker_configuration.dart';
 import 'package:kang_image_picker/model/video_selected_result.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:video_player/video_player.dart';
 
 class PickerScreen extends StatefulWidget {
@@ -45,6 +47,47 @@ class _PickerScreenState extends State<PickerScreen> {
   }
 
   Future<void> _callPicker() async {}
+
+  void openDialog() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (BuildContext context) {
+        return PhotoViewGallery.builder(
+          scrollPhysics: const BouncingScrollPhysics(),
+          backgroundDecoration: BoxDecoration(
+            color: Colors.black54,
+          ),
+          builder: (BuildContext ic, int index) {
+            return PhotoViewGalleryPageOptions(
+              onTapDown: (_, __, ___) {
+                Navigator.of(ic).pop();
+              },
+              imageProvider: _selectedImageList.elementAt(index),
+              tightMode: true,
+              initialScale: PhotoViewComputedScale.contained * 0.8,
+              heroAttributes: PhotoViewHeroAttributes(tag: index.toString()),
+            );
+          },
+          itemCount: _selectedImageList.length,
+          loadingBuilder: (context, ImageChunkEvent? event) => Center(
+            child: SizedBox(
+              width: 20.0,
+              height: 20.0,
+              child: CircularProgressIndicator(
+                value: event == null
+                    ? 0
+                    : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+              ),
+            ),
+          ),
+          // backgroundDecoration: widget.backgroundDecoration,
+          // pageController: widget.pageController,
+          // onPageChanged: onPageChanged,
+        );
+      },
+    );
+  }
 
   void showMsg(String title, String? content) {
     showDialog<void>(
@@ -138,14 +181,13 @@ class _PickerScreenState extends State<PickerScreen> {
           ],
           maxNumberOfItems: 1,
           videoRecordingTimeLimit: 30,
-          trimmerMaxDuration: 30.0,
+          trimmerMaxDuration: 30,
         ),
       );
       print('视频选择结果：$_selectedVideoResult');
       if (_selectedVideoResult == null) {
         return;
       }
-
       _playerController = VideoPlayerController.file(File(
         _selectedVideoResult!.videoPath,
       ));
@@ -303,7 +345,7 @@ class _PickerScreenState extends State<PickerScreen> {
                       print('value:$value');
                       final second = value.position.inSeconds.round();
                       return Text(
-                        '00:${second < 10 ? '0$second' : second}',
+                        '00:${second < 10 ? '0$second' : second}/00:${(_selectedVideoResult?.duration ?? 30) ~/ 1000}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -334,7 +376,7 @@ class _PickerScreenState extends State<PickerScreen> {
                             : Colors.black38,
                         child: value.isPlaying
                             ? null
-                            : Center(
+                            : const Center(
                                 child: Icon(
                                   Icons.play_arrow,
                                   color: Colors.white70,
@@ -374,12 +416,15 @@ class _PickerScreenState extends State<PickerScreen> {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                RepaintBoundary(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image(
-                      image: asset,
-                      fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: openDialog,
+                  child: RepaintBoundary(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image(
+                        image: asset,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
