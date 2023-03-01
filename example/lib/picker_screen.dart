@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
 
+import 'package:fijkplayer/fijkplayer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kang_image_picker/kang_image_picker.dart';
@@ -9,7 +10,6 @@ import 'package:kang_image_picker/model/picker_configuration.dart';
 import 'package:kang_image_picker/model/video_selected_result.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'package:video_player/video_player.dart';
 
 class PickerScreen extends StatefulWidget {
   const PickerScreen({super.key});
@@ -24,7 +24,9 @@ class _PickerScreenState extends State<PickerScreen> {
   final List<FileImage> _selectedImageList = [];
   final List<String> _selectedImagePathList = [];
   VideoSelectedResult? _selectedVideoResult;
-  VideoPlayerController? _playerController;
+
+  // VideoPlayerController? _playerController;
+  final FijkPlayer _playerController = FijkPlayer();
 
   @override
   void initState() {
@@ -34,8 +36,9 @@ class _PickerScreenState extends State<PickerScreen> {
 
   @override
   void dispose() {
-    _playerController?.dispose();
-    _playerController = null;
+    _playerController.release();
+    // _playerController?.dispose();
+    // _playerController = null;
     super.dispose();
   }
 
@@ -168,8 +171,9 @@ class _PickerScreenState extends State<PickerScreen> {
 
   void selectVideo() async {
     try {
-      await _playerController?.dispose();
-      _playerController = null;
+      // await _playerController?.dispose();
+      // _playerController = null;
+      await _playerController.reset();
       _selectedVideoResult = await KangImagePicker.selectVideo(
         configuration: const PickerConfiguration(
           mediaType: PickerMediaType.video,
@@ -188,12 +192,14 @@ class _PickerScreenState extends State<PickerScreen> {
       if (_selectedVideoResult == null) {
         return;
       }
-      _playerController = VideoPlayerController.file(File(
-        _selectedVideoResult!.videoPath,
-      ));
-      await _playerController!.initialize();
+      await _playerController.setDataSource(_selectedVideoResult!.videoPath);
       setState(() {});
-      await _playerController!.play();
+      // _playerController = VideoPlayerController.file(File(
+      //   _selectedVideoResult!.videoPath,
+      // ));
+      // await _playerController!.initialize();
+      // setState(() {});
+      // await _playerController!.play();
     } on PlatformException catch (e) {
       print('出错了，${e}');
     }
@@ -207,9 +213,11 @@ class _PickerScreenState extends State<PickerScreen> {
         actions: [
           TextButton.icon(
             onPressed: () async {
-              await _playerController?.dispose();
+              // await _playerController?.dispose();
+              await _playerController.pause();
+              await _playerController.reset();
               setState(() {
-                _playerController = null;
+                // _playerController = null;
                 _selectedVideoResult = null;
                 _selectedImagePathList.clear();
                 _selectedImageList.clear();
@@ -251,7 +259,7 @@ class _PickerScreenState extends State<PickerScreen> {
             ),
           ),
           if (_selectedImageList.isNotEmpty) _buildSelectedAssetsListView(),
-          if (_playerController != null) _buildVideoPlayView(),
+          if (_selectedVideoResult != null) _buildVideoPlayView(),
           if (_selectedImagePathList.isNotEmpty) _buildSuccessPathListView(),
           if (_selectedVideoResult != null) _buildVideoResultView(),
         ],
@@ -330,65 +338,63 @@ class _PickerScreenState extends State<PickerScreen> {
       flex: 2,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: AspectRatio(
-          aspectRatio: _playerController!.value.aspectRatio,
-          child: Stack(
-            children: [
-              VideoPlayer(_playerController!),
-              Align(
-                alignment: Alignment.bottomLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ValueListenableBuilder<VideoPlayerValue>(
-                    valueListenable: _playerController!,
-                    builder: (_, VideoPlayerValue value, child) {
-                      print('value:$value');
-                      final second = value.position.inSeconds.round();
-                      return Text(
-                        '00:${second < 10 ? '0$second' : second}/00:${(_selectedVideoResult?.duration ?? 30) ~/ 1000}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () async {
-                  if (_playerController?.value.isPlaying ?? false) {
-                    await _playerController?.pause();
-                    setState(() {});
-                  } else {
-                    await _playerController?.play();
-                    setState(() {});
-                  }
-                },
-                child: SizedBox.expand(
-                  child: ValueListenableBuilder<VideoPlayerValue>(
-                    valueListenable: _playerController!,
-                    builder: (_, value, __) {
-                      return ColoredBox(
-                        color: value.isPlaying
-                            ? Colors.transparent
-                            : Colors.black38,
-                        child: value.isPlaying
-                            ? null
-                            : const Center(
-                                child: Icon(
-                                  Icons.play_arrow,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
+        child: Stack(
+          children: [
+            FijkView(
+              player: _playerController,
+            ),
+            // Align(
+            //   alignment: Alignment.bottomLeft,
+            //   child: Padding(
+            //     padding: const EdgeInsets.all(8.0),
+            //     child: ValueListenableBuilder<VideoPlayerValue>(
+            //       valueListenable: _playerController!,
+            //       builder: (_, VideoPlayerValue value, child) {
+            //         print('value:$value');
+            //         final second = value.position.inSeconds.round();
+            //         return Text(
+            //           '00:${second < 10 ? '0$second' : second}/00:${(_selectedVideoResult?.duration ?? 30) ~/ 1000}',
+            //           style: const TextStyle(
+            //             color: Colors.white,
+            //             fontSize: 18,
+            //           ),
+            //         );
+            //       },
+            //     ),
+            //   ),
+            // ),
+            // GestureDetector(
+            //   behavior: HitTestBehavior.translucent,
+            //   onTap: () async {
+            //     if (_playerController?.value.isPlaying ?? false) {
+            //       await _playerController?.pause();
+            //       setState(() {});
+            //     } else {
+            //       await _playerController?.play();
+            //       setState(() {});
+            //     }
+            //   },
+            //   child: SizedBox.expand(
+            //     child: ValueListenableBuilder<VideoPlayerValue>(
+            //       valueListenable: _playerController!,
+            //       builder: (_, value, __) {
+            //         return ColoredBox(
+            //           color:
+            //               value.isPlaying ? Colors.transparent : Colors.black38,
+            //           child: value.isPlaying
+            //               ? null
+            //               : const Center(
+            //                   child: Icon(
+            //                     Icons.play_arrow,
+            //                     color: Colors.white70,
+            //                   ),
+            //                 ),
+            //         );
+            //       },
+            //     ),
+            //   ),
+            // ),
+          ],
         ),
       ),
     );

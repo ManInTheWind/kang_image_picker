@@ -110,6 +110,8 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
 
     private PictureSelectorStyle selectorStyle;
 
+    private FlutterPickerConfiguration flutterPickerConfiguration;
+
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
         channel = new MethodChannel(binding.getBinaryMessenger(), "kang_image_picker");
@@ -163,8 +165,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
 
 
     private void selectSinglePhoto(Object arguments, Result result) {
-        FlutterPickerConfiguration flutterPickerConfiguration;
-        Log.i(TAG,"arguments:"+arguments);
+        Log.i(TAG, "arguments:" + arguments);
         if (arguments != null) {
             try {
                 flutterPickerConfiguration = FlutterPickerConfiguration.fromObject(arguments);
@@ -176,7 +177,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
         } else {
             flutterPickerConfiguration = FlutterPickerConfiguration.defaultConfiguration();
         }
-        Log.i(TAG,"flutterPickerConfiguration:"+flutterPickerConfiguration);
+        Log.i(TAG, "flutterPickerConfiguration:" + flutterPickerConfiguration);
         if (selectorStyle == null) {
             selectorStyle = getSelectorStyle(flutterPickerConfiguration.getTintColor());
         }
@@ -486,6 +487,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
      */
     private class MeOnCameraInterceptListener implements OnCameraInterceptListener {
 
+
         @Override
         public void openCamera(Fragment fragment, int cameraMode, int requestCode) {
             SimpleCameraX camera = SimpleCameraX.of();
@@ -495,7 +497,9 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             camera.setVideoBitRate(3 * 1024 * 1024);
             camera.isDisplayRecordChangeTime(true);
             ///TODO:设置为tineColor
-            camera.setCaptureLoadingColor(Color.GREEN);
+            if (flutterPickerConfiguration != null && flutterPickerConfiguration.getTintColor() != null) {
+                camera.setCaptureLoadingColor(Color.parseColor(flutterPickerConfiguration.getTintColor()));
+            }
             //手指点击聚焦
             camera.isManualFocusCameraPreview(true);
             //手机缩放相机
