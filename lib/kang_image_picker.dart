@@ -58,4 +58,32 @@ class KangImagePicker {
     }
     return videoSelectedResult;
   }
+
+  static Future<List<VideoSelectedResult>?> selectMultiVideo({
+    PickerConfiguration configuration = const PickerConfiguration(),
+  }) async {
+    final result = await _methodChannel.invokeMethod<Object?>(
+      'selectMultiVideo',
+      configuration.toJson(),
+    );
+    if (result == null) {
+      return null;
+    }
+    List<VideoSelectedResult> videoSelectedList = <VideoSelectedResult>[];
+    if (result is List) {
+      for (var resultItem in result) {
+        if (resultItem != null && resultItem is Map) {
+          VideoSelectedResult videoSelectedResult = VideoSelectedResult(
+            videoPath: resultItem['videoPath'] as String,
+            thumbnailPath: resultItem['thumbnailPath'] as String?,
+            thumbnailWidth: resultItem['thumbnailWidth'] as double?,
+            thumbnailHeight: resultItem['thumbnailHeight'] as double?,
+            duration: resultItem['duration'] as double,
+          );
+          videoSelectedList.add(videoSelectedResult);
+        }
+      }
+    }
+    return videoSelectedList;
+  }
 }

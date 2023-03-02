@@ -1,13 +1,7 @@
 package com.jalagar.kang_image_picker;
 
-//import static android.provider.Settings.System.getString;
-
-import static com.luck.picture.lib.thread.PictureThreadUtils.runOnUiThread;
-
 import android.Manifest;
 import android.app.Dialog;
-import android.content.Context.*;
-
 
 import android.app.Activity;
 import android.content.Context;
@@ -19,7 +13,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -33,11 +26,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
-import androidx.activity.ComponentActivity;
 import androidx.annotation.ChecksSdkIntAtLeast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.camera.core.AspectRatio;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
@@ -45,7 +36,6 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.luck.lib.camerax.CameraImageEngine;
 import com.luck.lib.camerax.SimpleCameraX;
@@ -87,6 +77,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -157,6 +156,9 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                 break;
             case "selectVideo":
                 selectVideo(call.arguments, result);
+                break;
+            case "selectMultiVideo":
+                selectMultiVideo(call.arguments, result);
                 break;
             default:
                 result.notImplemented();
@@ -272,11 +274,12 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                 .setImageEngine(GlideEngine.createGlideEngine())
                 .setSelectorUIStyle(selectorStyle)
                 .setCameraInterceptListener(new MeOnCameraInterceptListener())
+                .setMaxVideoSelectNum(1)
                 .setMaxSelectNum(1)
                 .setRecordVideoMaxSecond(flutterPickerConfiguration.getVideoRecordingTimeLimit())
                 .setSelectMaxDurationSecond(flutterPickerConfiguration.getTrimmerMaxDuration())
                 .setCustomLoadingListener(getCustomLoadingListener())
-                .setVideoPlayerEngine(new IjkPlayerEngine())
+//                .setVideoPlayerEngine(new IjkPlayerEngine())
                 .forResult(new OnResultCallbackListener<LocalMedia>() {
                     @Override
                     public void onResult(ArrayList<LocalMedia> pickResult) {
@@ -287,13 +290,13 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                         if (localMedia.getVideoThumbnailPath() == null) {
                             getThumbnailAsync(getContext(), localMedia.getPath(), new ThumbnailCallback() {
                                 @Override
-                                public void onThumbnailReady(String thumbnailPath) {
+                                public void onThumbnailReady(String thumbnailPath, int width, int height) {
                                     Log.i(TAG, "加载缩略图完成: " + thumbnailPath);
                                     Map<String, Object> videoSelectResultMap = new HashMap<>();
                                     videoSelectResultMap.put("videoPath", localMedia.getRealPath());
                                     videoSelectResultMap.put("thumbnailPath", thumbnailPath);
-                                    videoSelectResultMap.put("thumbnailWidth", ((double) localMedia.getWidth()));
-                                    videoSelectResultMap.put("thumbnailHeight", ((double) localMedia.getWidth()));
+                                    videoSelectResultMap.put("thumbnailWidth", ((double) width));
+                                    videoSelectResultMap.put("thumbnailHeight", ((double) height));
                                     videoSelectResultMap.put("duration", ((double) localMedia.getDuration()));
                                     result.success(videoSelectResultMap);
                                 }
@@ -310,7 +313,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                             videoSelectResultMap.put("videoPath", localMedia.getRealPath());
                             videoSelectResultMap.put("thumbnailPath", localMedia.getVideoThumbnailPath());
                             videoSelectResultMap.put("thumbnailWidth", ((double) localMedia.getWidth()));
-                            videoSelectResultMap.put("thumbnailHeight", ((double) localMedia.getWidth()));
+                            videoSelectResultMap.put("thumbnailHeight", ((double) localMedia.getHeight()));
                             videoSelectResultMap.put("duration", ((double) localMedia.getDuration()));
                             result.success(videoSelectResultMap);
                         }
@@ -325,6 +328,101 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                 });
     }
 
+    private void selectMultiVideo(Object arguments, Result result) {
+        FlutterPickerConfiguration flutterPickerConfiguration;
+        if (arguments != null) {
+            try {
+                flutterPickerConfiguration = FlutterPickerConfiguration.fromObject(arguments);
+            } catch (JSONException e) {
+                Pair<String, String> flutterDefaultError = getFlutterDefaultError("参数不正确");
+                result.error(flutterDefaultError.first, flutterDefaultError.second, e.getStackTrace());
+                return;
+            }
+        } else {
+            flutterPickerConfiguration = FlutterPickerConfiguration.defaultConfiguration();
+        }
+        if (selectorStyle == null) {
+            selectorStyle = getSelectorStyle(flutterPickerConfiguration.getTintColor());
+        }
+        Log.i(TAG, "flutterPickerConfiguration:" + flutterPickerConfiguration);
+        int totalResultCount = 0;
+        PictureSelector.create(mActivity)
+                .openGallery(SelectMimeType.ofVideo())
+                .setImageEngine(GlideEngine.createGlideEngine())
+                .setSelectorUIStyle(selectorStyle)
+                .setCameraInterceptListener(new MeOnCameraInterceptListener())
+                .setMaxSelectNum(flutterPickerConfiguration.getMaxNumberOfItems())
+                .setMaxVideoSelectNum(flutterPickerConfiguration.getMaxNumberOfItems())
+                .setRecordVideoMaxSecond(flutterPickerConfiguration.getVideoRecordingTimeLimit())
+                .setSelectMaxDurationSecond(flutterPickerConfiguration.getTrimmerMaxDuration())
+                .setCustomLoadingListener(getCustomLoadingListener())
+//                .setVideoPlayerEngine(new IjkPlayerEngine())
+                .forResult(new OnResultCallbackListener<LocalMedia>() {
+                    @Override
+                    public void onResult(ArrayList<LocalMedia> pickResult) {
+                        analyticalSelectResults(pickResult);
+                        List<Map<String, Object>> videoSelectResultList = new ArrayList<>();
+                        for (LocalMedia mediaItem : pickResult) {
+                            getThumbnailAsync(getContext(), mediaItem.getPath(), new ThumbnailCallback() {
+                                @Override
+                                public void onThumbnailReady(String thumbnailPath, int width, int height) {
+                                    Log.e(TAG, "加载缩略图完成，线程：" + Thread.currentThread().getName());
+                                    Map<String, Object> videoSelectResultMap = new HashMap<>();
+                                    videoSelectResultMap.put("videoPath", mediaItem.getRealPath());
+                                    videoSelectResultMap.put("duration", ((double) mediaItem.getDuration()));
+                                    videoSelectResultMap.put("thumbnailPath", thumbnailPath);
+                                    videoSelectResultMap.put("thumbnailWidth", ((double) width));
+                                    videoSelectResultMap.put("thumbnailHeight", ((double) height));
+                                    synchronized (videoSelectResultList) {
+                                        videoSelectResultList.add(videoSelectResultMap);
+                                    }
+                                    if (videoSelectResultList.size() == pickResult.size()) {
+                                        if (videoSelectResultList.contains(null)){
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                                videoSelectResultList.removeIf(Objects::isNull);
+                                            }else{
+                                                List<Integer> toBeRemove = new ArrayList<>();
+                                                for (int i = 0; i < videoSelectResultList.size(); i++) {
+                                                    if (Objects.isNull(videoSelectResultList.get(i))){
+                                                        toBeRemove.add(i);
+                                                    }
+                                                }
+                                                if (!toBeRemove.isEmpty()){
+                                                    for (Integer index : toBeRemove) {
+                                                        videoSelectResultList.remove(index.intValue());
+                                                    }
+                                                }
+
+                                            }
+                                        }
+                                        result.success(videoSelectResultList);
+                                    }
+                                }
+
+                                @Override
+                                public void onThumbnailFailed() {
+                                    Log.e(TAG, "加载缩略图失败");
+                                    synchronized (videoSelectResultList) {
+                                        videoSelectResultList.add(null);
+                                    }
+//                                    Pair<String, String> defaultError = getFlutterDefaultError("加载缩略图失败");
+//                                    if (videoSelectResultList.size() == pickResult.size()) {
+//                                        result.error(defaultError.first, defaultError.second, null);
+//                                    }
+
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        // 处理取消操作
+                        Pair<String, String> flutterCancelError = getFlutterCancelError();
+                        result.error(flutterCancelError.first, flutterCancelError.second, null);
+                    }
+                });
+    }
 
     /**
      * 自定义裁剪
@@ -414,7 +512,6 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             return options;
         }
     }
-
 
     /**
      * 创建自定义输出目录
@@ -554,7 +651,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                     @Override
                     public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        resource.compress(Bitmap.CompressFormat.JPEG, 60, stream);
+                        resource.compress(Bitmap.CompressFormat.JPEG, 80, stream);
                         FileOutputStream fos = null;
                         String result = null;
                         String targetPath = getVideoThumbnailDir();
@@ -571,7 +668,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                             PictureFileUtils.close(stream);
                         }
                         // 处理缩略图
-                        callback.onThumbnailReady(result);
+                        callback.onThumbnailReady(result, resource.getWidth(), resource.getHeight());
                     }
 
                     @Override
@@ -587,7 +684,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
     }
 
     private interface ThumbnailCallback {
-        void onThumbnailReady(String thumbnailPath);
+        void onThumbnailReady(String thumbnailPath, int width, int height);
 
         void onThumbnailFailed();
     }

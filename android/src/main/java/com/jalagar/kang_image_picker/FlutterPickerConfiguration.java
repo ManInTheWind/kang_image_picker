@@ -1,17 +1,14 @@
 package com.jalagar.kang_image_picker;
 
 import androidx.annotation.NonNull;
-import androidx.camera.core.AspectRatio;
 
 import com.luck.picture.lib.config.SelectMimeType;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 public class FlutterPickerConfiguration {
@@ -38,7 +35,7 @@ public class FlutterPickerConfiguration {
     private Integer trimmerMaxDuration;
 
     public static FlutterPickerConfiguration fromObject(Object obj) throws JSONException {
-        if (!(obj instanceof Map)){
+        if (!(obj instanceof Map)) {
             return defaultConfiguration();
         }
         JSONObject jsonObject = new JSONObject(obj.toString());
@@ -65,6 +62,7 @@ public class FlutterPickerConfiguration {
                     break;
             }
         }
+        System.out.println("map:" + map);
         configuration.setCropRatio(((Double) map.get("cropRatio")));
         configuration.setTintColor(((String) map.get("tintColor")));
         configuration.setMaxNumberOfItems(((Integer) map.get("maxNumberOfItems")));
