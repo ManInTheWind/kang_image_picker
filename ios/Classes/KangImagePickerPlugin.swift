@@ -636,20 +636,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
-            /**
-             var resultFilePathList = [String]()
-             let dispatchGroup = DispatchGroup()
-             let queue = DispatchQueue.global()
-
-             dispatchGroup.notify(queue: DispatchQueue.main) {
-                 result(resultFilePathList)
-                 picker?.dismiss(animated: true)
-             }
-             */
-
             var resultFilePathList = [[String: Any]]()
             let dispatchGroup = DispatchGroup()
-            let queue = DispatchQueue.global()
+            let queue = DispatchQueue.global(qos: .background)
 
             for item: YPMediaItem in items {
                 dispatchGroup.enter()
@@ -658,31 +647,30 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 case .photo(p: _):
                     dispatchGroup.leave()
                 case .video(v: let video):
-                    var resultMap = [String: Any]()
+                    queue.async {
+                        if let result = self.saveImage(video.thumbnail) {
+                            var resultMap = [String: Any]()
+                            if #available(iOS 16.0, *) {
+                                resultMap["videoPath"] = video.url.path()
+                            } else {
+                                resultMap["videoPath"] = video.url.path
+                            }
+                            resultMap["thumbnailPath"] = result.0
+                            resultMap["thumbnailWidth"] = result.1
+                            resultMap["thumbnailHeight"] = result.2
+                            resultMap["duration"] = video.thumbnail.duration
+                            /// file:///private/var/mobile/Containers/Data/Application/95B7E022-6A7D-4083-83E9-BD897A100BE0/tmp/51FE6CF9-6FB1-426E-A938-4610664EE907.mov
 
-                    if let result = self.saveImage(video.thumbnail) {
-                        resultMap["thumbnailPath"] = result.0
-                        resultMap["thumbnailWidth"] = result.1
-                        resultMap["thumbnailHeight"] = result.2
+                            resultFilePathList.append(resultMap)
+                            dispatchGroup.leave()
+                        }
                     }
-                    resultMap["duration"] = video.thumbnail.duration
-                    /// file:///private/var/mobile/Containers/Data/Application/95B7E022-6A7D-4083-83E9-BD897A100BE0/tmp/51FE6CF9-6FB1-426E-A938-4610664EE907.mov
-                    let assetURL = items.singleVideo!.url
-                    if #available(iOS 16.0, *) {
-                        resultMap["videoPath"] = assetURL.path()
-                    } else {
-                        resultMap["videoPath"] = assetURL.path
-                    }
-                    resultFilePathList.append(resultMap)
-                    dispatchGroup.leave()
                 }
             }
             dispatchGroup.notify(queue: DispatchQueue.main) {
                 result(resultFilePathList)
                 picker?.dismiss(animated: true)
             }
-
-            picker?.dismiss(animated: true, completion: nil)
         }
 
         vc!.present(picker, animated: true, completion: nil)

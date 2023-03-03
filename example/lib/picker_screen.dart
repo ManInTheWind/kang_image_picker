@@ -47,8 +47,6 @@ class _PickerScreenState extends State<PickerScreen> {
     }
   }
 
-  Future<void> _callPicker() async {}
-
   void openDialog() {
     showDialog(
       context: context,
@@ -222,6 +220,7 @@ class _PickerScreenState extends State<PickerScreen> {
       if (res == null) {
         return;
       }
+      res.forEach((element) => print);
       _selectedVideoResult = res.first;
       _playerController = VideoPlayerController.file(File(
         _selectedVideoResult!.videoPath,
