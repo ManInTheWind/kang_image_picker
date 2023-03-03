@@ -6,6 +6,11 @@ import UIKit
 import YPImagePicker
 
 public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelegate {
+    
+    public func imagePickerHasNoItemsInLibrary(_ picker: YPImagePicker) {
+
+    }
+    
 //    private var FLUTTER_CANCEL_CODE: String = "-2"
 //    private var FLUTTER_SELECTED_BUT_NOT_FOUND_CODE: String = "-2"
 
