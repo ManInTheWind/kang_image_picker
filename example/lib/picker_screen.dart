@@ -216,11 +216,11 @@ class _PickerScreenState extends State<PickerScreen> {
           trimmerMaxDuration: 30,
         ),
       );
-      print('视频选择结果：${res?.length} $res');
-      if (res == null) {
+      print('视频选择结果：${res?.length} ');
+      res?.forEach((element) => print(element));
+      if (res == null || res.isEmpty) {
         return;
       }
-      res.forEach((element) => print);
       _selectedVideoResult = res.first;
       _playerController = VideoPlayerController.file(File(
         _selectedVideoResult!.videoPath,
@@ -378,7 +378,6 @@ class _PickerScreenState extends State<PickerScreen> {
                   child: ValueListenableBuilder<VideoPlayerValue>(
                     valueListenable: _playerController!,
                     builder: (_, VideoPlayerValue value, child) {
-                      print('value:$value');
                       final second = value.position.inSeconds.round();
                       return Text(
                         '00:${second < 10 ? '0$second' : second}',
