@@ -277,8 +277,11 @@ class _PickerScreenState extends State<PickerScreen> {
                           color: Colors.indigoAccent,
                         ),
                         _button('选择视频', selectVideo, color: Colors.greenAccent),
-                        _button('选择多个视频', selectMultiVideo,
-                            color: Colors.green),
+                        _button(
+                          '选择多个视频',
+                          selectMultiVideo,
+                          color: Colors.green,
+                        ),
                       ],
                     ),
                   ],

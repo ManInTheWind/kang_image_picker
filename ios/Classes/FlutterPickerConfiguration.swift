@@ -8,6 +8,24 @@
 import Foundation
 import YPImagePicker
 
+struct VideoPickResult {
+    var videoPath: String
+    var duration: Double
+    var thumbnailPath: String?
+    var thumbnailWidth: Int?
+    var thumbnailHeight: Int?
+
+    func toMap() -> [String: Any?] {
+        var map = [String: Any?]()
+        map["videoPath"] = videoPath
+        map["duration"] = duration
+        map["thumbnailPath"] = thumbnailPath
+        map["thumbnailWidth"] = thumbnailWidth
+        map["thumbnailHeight"] = thumbnailHeight
+        return map
+    }
+}
+
 class FlutterPickerConfiguration: CustomStringConvertible {
     /// 选择库中可用的媒体类型。默认为.photo
     var mediaType: YPlibraryMediaType

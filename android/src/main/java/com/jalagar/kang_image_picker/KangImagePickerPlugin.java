@@ -295,8 +295,8 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                                     Map<String, Object> videoSelectResultMap = new HashMap<>();
                                     videoSelectResultMap.put("videoPath", localMedia.getRealPath());
                                     videoSelectResultMap.put("thumbnailPath", thumbnailPath);
-                                    videoSelectResultMap.put("thumbnailWidth", ((double) width));
-                                    videoSelectResultMap.put("thumbnailHeight", ((double) height));
+                                    videoSelectResultMap.put("thumbnailWidth", width);
+                                    videoSelectResultMap.put("thumbnailHeight", height);
                                     videoSelectResultMap.put("duration", ((double) localMedia.getDuration()));
                                     result.success(videoSelectResultMap);
                                 }
@@ -312,8 +312,8 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                             Map<String, Object> videoSelectResultMap = new HashMap<>();
                             videoSelectResultMap.put("videoPath", localMedia.getRealPath());
                             videoSelectResultMap.put("thumbnailPath", localMedia.getVideoThumbnailPath());
-                            videoSelectResultMap.put("thumbnailWidth", ((double) localMedia.getWidth()));
-                            videoSelectResultMap.put("thumbnailHeight", ((double) localMedia.getHeight()));
+                            videoSelectResultMap.put("thumbnailWidth", localMedia.getWidth());
+                            videoSelectResultMap.put("thumbnailHeight", localMedia.getHeight());
                             videoSelectResultMap.put("duration", ((double) localMedia.getDuration()));
                             result.success(videoSelectResultMap);
                         }
@@ -371,23 +371,23 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                                     videoSelectResultMap.put("videoPath", mediaItem.getRealPath());
                                     videoSelectResultMap.put("duration", ((double) mediaItem.getDuration()));
                                     videoSelectResultMap.put("thumbnailPath", thumbnailPath);
-                                    videoSelectResultMap.put("thumbnailWidth", ((double) width));
-                                    videoSelectResultMap.put("thumbnailHeight", ((double) height));
+                                    videoSelectResultMap.put("thumbnailWidth", width);
+                                    videoSelectResultMap.put("thumbnailHeight", height);
                                     synchronized (videoSelectResultList) {
                                         videoSelectResultList.add(videoSelectResultMap);
                                     }
                                     if (videoSelectResultList.size() == pickResult.size()) {
-                                        if (videoSelectResultList.contains(null)){
+                                        if (videoSelectResultList.contains(null)) {
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                                 videoSelectResultList.removeIf(Objects::isNull);
-                                            }else{
+                                            } else {
                                                 List<Integer> toBeRemove = new ArrayList<>();
                                                 for (int i = 0; i < videoSelectResultList.size(); i++) {
-                                                    if (Objects.isNull(videoSelectResultList.get(i))){
+                                                    if (Objects.isNull(videoSelectResultList.get(i))) {
                                                         toBeRemove.add(i);
                                                     }
                                                 }
-                                                if (!toBeRemove.isEmpty()){
+                                                if (!toBeRemove.isEmpty()) {
                                                     for (Integer index : toBeRemove) {
                                                         videoSelectResultList.remove(index.intValue());
                                                     }

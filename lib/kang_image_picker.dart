@@ -51,8 +51,8 @@ class KangImagePicker {
       videoSelectedResult = VideoSelectedResult(
         videoPath: result['videoPath'] as String,
         thumbnailPath: result['thumbnailPath'] as String?,
-        thumbnailWidth: result['thumbnailWidth'] as double?,
-        thumbnailHeight: result['thumbnailHeight'] as double?,
+        thumbnailWidth: result['thumbnailWidth'] as int?,
+        thumbnailHeight: result['thumbnailHeight'] as int?,
         duration: result['duration'] as double,
       );
     }
@@ -76,8 +76,8 @@ class KangImagePicker {
           VideoSelectedResult videoSelectedResult = VideoSelectedResult(
             videoPath: resultItem['videoPath'] as String,
             thumbnailPath: resultItem['thumbnailPath'] as String?,
-            thumbnailWidth: resultItem['thumbnailWidth'] as double?,
-            thumbnailHeight: resultItem['thumbnailHeight'] as double?,
+            thumbnailWidth: resultItem['thumbnailWidth'] as int?,
+            thumbnailHeight: resultItem['thumbnailHeight'] as int?,
             duration: resultItem['duration'] as double,
           );
           videoSelectedList.add(videoSelectedResult);

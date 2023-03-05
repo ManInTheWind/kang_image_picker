@@ -496,23 +496,31 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 return
             }
 //            self.selectedItems = items
-
-            var resultMap = [String: Any]()
+            guard let assetURL = items.singleVideo?.url else {
+                result(self.getFlutterSelectedButNotFoundError())
+                return
+            }
+            var videoResult: VideoPickResult
+            var duration: Double
+            var videoPath: String
+            if let avAsset = AVAsset(url: assetURL) as AVAsset? {
+                duration = avAsset.duration.seconds
+            } else {
+                duration = config.video.trimmerMaxDuration
+            }
+            if #available(iOS 16.0, *) {
+                videoPath = assetURL.path()
+            } else {
+                videoPath = assetURL.path
+            }
+            videoResult = VideoPickResult(videoPath: videoPath, duration: duration)
 
             if let result = self.saveImage(items.singleVideo!.thumbnail) {
-                resultMap["thumbnailPath"] = result.0
-                resultMap["thumbnailWidth"] = result.1
-                resultMap["thumbnailHeight"] = result.2
+                videoResult.thumbnailPath = result.0
+                videoResult.thumbnailWidth = result.1
+                videoResult.thumbnailHeight = result.2
             }
-            resultMap["duration"] = items.singleVideo?.thumbnail.duration
-            /// file:///private/var/mobile/Containers/Data/Application/95B7E022-6A7D-4083-83E9-BD897A100BE0/tmp/51FE6CF9-6FB1-426E-A938-4610664EE907.mov
-            let assetURL = items.singleVideo!.url
-            if #available(iOS 16.0, *) {
-                resultMap["videoPath"] = assetURL.path()
-            } else {
-                resultMap["videoPath"] = assetURL.path
-            }
-            result(resultMap)
+            result(videoResult.toMap())
 
             picker?.dismiss(animated: true, completion: nil)
         }
@@ -633,7 +641,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
-            var resultFilePathList = [[String: Any]]()
+            var resultFilePathList = [[String: Any?]]()
             let dispatchGroup = DispatchGroup()
             let queue = DispatchQueue.global(qos: .background)
 
@@ -644,32 +652,31 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                     case .photo(p: _):
                         dispatchGroup.leave()
                     case .video(v: let video):
-                        var resultMap = [String: Any]()
+
+                        let assetURL = video.url
+
+                        var videoResult: VideoPickResult
+                        var duration: Double
+                        var videoPath: String
+                        if let avAsset = AVAsset(url: assetURL) as AVAsset? {
+                            duration = avAsset.duration.seconds
+                        } else {
+                            duration = config.video.trimmerMaxDuration
+                        }
                         if #available(iOS 16.0, *) {
-                            resultMap["videoPath"] = video.url.path()
+                            videoPath = assetURL.path()
                         } else {
-                            resultMap["videoPath"] = video.url.path
+                            videoPath = assetURL.path
                         }
-                        if let avAsset = AVAsset(url: video.url) as AVAsset? {
-                            resultMap["duration"] = avAsset.duration.seconds
-                            print("Video duration: \(String(describing: resultMap["duration"])) seconds")
-                        } else {
-                            resultMap["duration"] = config.video.trimmerMaxDuration
-                        }
+                        videoResult = VideoPickResult(videoPath: videoPath, duration: duration)
 
-                        if let result = self.saveImage(video.thumbnail) {
-                            resultMap["thumbnailPath"] = result.0
-                            resultMap["thumbnailWidth"] = result.1
-                            resultMap["thumbnailHeight"] = result.2
-                            ////Users/kangkang/Library/Developer/CoreSimulator/Devices/97FE7714-D2A5-44EE-84E6-25BC18040E95/data/Containers/Data/Application/442D248B-6645-4E14-B9A3-03D93A107EE2/Documents/20230304091737.jpg
-                            /// file:///private/var/mobile/Containers/Data/Application/95B7E022-6A7D-4083-83E9-BD897A100BE0/tmp/51FE6CF9-6FB1-426E-A938-4610664EE907.mov
-
-                            resultFilePathList.append(resultMap)
-                            dispatchGroup.leave()
-                        } else {
-                            resultFilePathList.append(resultMap)
-                            dispatchGroup.leave()
+                        if let result = self.saveImage(items.singleVideo!.thumbnail) {
+                            videoResult.thumbnailPath = result.0
+                            videoResult.thumbnailWidth = result.1
+                            videoResult.thumbnailHeight = result.2
                         }
+                        resultFilePathList.append(videoResult.toMap())
+                        dispatchGroup.leave()
                     }
                 }
             }
@@ -720,7 +727,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         return resultAsset
     }
 
-    func saveImage(_ image: UIImage) -> (String, CGFloat, CGFloat)? {
+    func saveImage(_ image: UIImage) -> (String, Int, Int)? {
         // 获取当前时间作为文件名
 //        let date = Date()
 //        let formatter = DateFormatter()
@@ -729,7 +736,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
         let randomNum = Int(arc4random_uniform(UInt32.max))
-        let filename = "thumbnail_\(timestamp)_\(randomNum).jpg"
+        let filename = "thumbnail_\(timestamp)_\(randomNum)"
 
         // 获取Documents目录路径
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
@@ -750,7 +757,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         let height: CGFloat = image.size.height
 
         // 返回路径、宽度和高度信息
-        return (filePath, width, height)
+        return (filePath, Int(round(width)), Int(round(height)))
     }
 
     func getCurrentViewController(base: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {

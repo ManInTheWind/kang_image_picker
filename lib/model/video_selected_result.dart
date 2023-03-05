@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class VideoSelectedResult {
   final String videoPath;
   final String? thumbnailPath;
-  final double? thumbnailWidth;
-  final double? thumbnailHeight;
+  final int? thumbnailWidth;
+  final int? thumbnailHeight;
   final double duration;
 
   const VideoSelectedResult({
