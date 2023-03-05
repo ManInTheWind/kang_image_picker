@@ -654,7 +654,6 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                     case .video(v: let video):
 
                         let assetURL = video.url
-
                         var videoResult: VideoPickResult
                         var duration: Double
                         var videoPath: String
@@ -669,14 +668,16 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                             videoPath = assetURL.path
                         }
                         videoResult = VideoPickResult(videoPath: videoPath, duration: duration)
-
-                        if let result = self.saveImage(items.singleVideo!.thumbnail) {
+                        if let result = self.saveImage(video.thumbnail) {
                             videoResult.thumbnailPath = result.0
                             videoResult.thumbnailWidth = result.1
                             videoResult.thumbnailHeight = result.2
+                            resultFilePathList.append(videoResult.toMap())
+                            dispatchGroup.leave()
+                        } else {
+                            resultFilePathList.append(videoResult.toMap())
+                            dispatchGroup.leave()
                         }
-                        resultFilePathList.append(videoResult.toMap())
-                        dispatchGroup.leave()
                     }
                 }
             }
@@ -742,11 +743,11 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 print("创建路径失败")
             }
         }
-  
-        // 拼接文件路径
-        let filePath:URL = cacheImageUrl.appendingPathComponent("\(filename).jpg")
 
-        print("filePath:\(filePath)")
+        // 拼接文件路径
+        let filePath: URL = cacheImageUrl.appendingPathComponent("\(filename).jpg")
+
+//        print("filePath:\(filePath)")
 
         // 保存图片
         do {
