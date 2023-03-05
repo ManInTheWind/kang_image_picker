@@ -728,27 +728,31 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
     }
 
     func saveImage(_ image: UIImage) -> (String, Int, Int)? {
-        // 获取当前时间作为文件名
-//        let date = Date()
-//        let formatter = DateFormatter()
-//        formatter.dateFormat = "yyyyMMddHHmmssSSS"
-//        let filename = formatter.string(from: date)
-
         let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
         let randomNum = Int(arc4random_uniform(UInt32.max))
         let filename = "thumbnail_\(timestamp)_\(randomNum)"
-
-        // 获取Documents目录路径
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
-
+        let fileManaget = FileManager.default
+        // 获取缓存目录路径
+        let cacheDirectoryUrl = fileManaget.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let cacheImageUrl = cacheDirectoryUrl.appendingPathComponent("cacheimage")
+        if !fileManaget.fileExists(atPath: cacheImageUrl.path) {
+            do {
+                try fileManaget.createDirectory(at: cacheImageUrl, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print("创建路径失败")
+            }
+        }
+  
         // 拼接文件路径
-        let filePath = "\(documentsPath)/\(filename).jpg"
+        let filePath:URL = cacheImageUrl.appendingPathComponent("\(filename).jpg")
+
+        print("filePath:\(filePath)")
 
         // 保存图片
         do {
-            try image.jpegData(compressionQuality: 0.8)?.write(to: URL(fileURLWithPath: filePath))
+            try image.jpegData(compressionQuality: 0.8)?.write(to: filePath)
         } catch {
-            print("Error saving image: \(error.localizedDescription)")
+            print("保存图片失败: \(error.localizedDescription)")
             return nil
         }
 
@@ -757,7 +761,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         let height: CGFloat = image.size.height
 
         // 返回路径、宽度和高度信息
-        return (filePath, Int(round(width)), Int(round(height)))
+        return (filePath.path, Int(round(width)), Int(round(height)))
     }
 
     func getCurrentViewController(base: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {
