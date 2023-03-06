@@ -154,11 +154,8 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             case "selectPhotos":
                 selectPhotos(call.arguments, result);
                 break;
-            case "selectVideo":
-                selectVideo(call.arguments, result);
-                break;
-            case "selectMultiVideo":
-                selectMultiVideo(call.arguments, result);
+            case "selectVideos":
+                selectVideos(call.arguments, result);
                 break;
             default:
                 result.notImplemented();
@@ -166,48 +163,9 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
     }
 
 
-    private void selectSinglePhoto(Object arguments, Result result) {
-        Log.i(TAG, "arguments:" + arguments);
-        if (arguments != null) {
-            try {
-                flutterPickerConfiguration = FlutterPickerConfiguration.fromObject(arguments);
-            } catch (JSONException e) {
-                Pair<String, String> flutterDefaultError = getFlutterDefaultError("参数不正确");
-                result.error(flutterDefaultError.first, flutterDefaultError.second, e.getStackTrace());
-                return;
-            }
-        } else {
-            flutterPickerConfiguration = FlutterPickerConfiguration.defaultConfiguration();
-        }
-        Log.i(TAG, "flutterPickerConfiguration:" + flutterPickerConfiguration);
-        if (selectorStyle == null) {
-            selectorStyle = getSelectorStyle(flutterPickerConfiguration.getTintColor());
-        }
-        PictureSelectionModel pictureSelector = PictureSelector.create(mActivity).openGallery(flutterPickerConfiguration.getMediaType())
-                .setImageEngine(GlideEngine.createGlideEngine())
-                .setSelectorUIStyle(selectorStyle)
-                .setCameraInterceptListener(new MeOnCameraInterceptListener())
-                .setMaxSelectNum(flutterPickerConfiguration.getMaxNumberOfItems());
-        if (flutterPickerConfiguration.getCropRatio() != null) {
-            CropRatio cropRatio = CropRatio.fromValue(flutterPickerConfiguration.getCropRatio());
-            pictureSelector.setCropEngine(new ImageFileCropEngine(cropRatio));
-        }
-        pictureSelector.forResult(new OnResultCallbackListener<LocalMedia>() {
-            @Override
-            public void onResult(ArrayList<LocalMedia> pickResult) {
-                // 处理返回结果
-                result.success(pickResult.get(0).getCutPath());
-            }
-
-            @Override
-            public void onCancel() {
-                // 处理取消操作
-                Pair<String, String> flutterCancelError = getFlutterCancelError();
-                result.error(flutterCancelError.first, flutterCancelError.second, null);
-            }
-        });
-    }
-
+    /**
+     * 选择图片
+     */
     private void selectPhotos(Object arguments, Result result) {
         FlutterPickerConfiguration flutterPickerConfiguration;
         if (arguments != null) {
@@ -257,74 +215,10 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                     }
                 });
     }
-
-
-    private void selectVideo(Object arguments, Result result) {
-        FlutterPickerConfiguration flutterPickerConfiguration;
-        if (arguments != null) {
-            try {
-                flutterPickerConfiguration = FlutterPickerConfiguration.fromObject(arguments);
-            } catch (JSONException e) {
-                Pair<String, String> flutterDefaultError = getFlutterDefaultError("参数不正确");
-                result.error(flutterDefaultError.first, flutterDefaultError.second, e.getStackTrace());
-                return;
-            }
-        } else {
-            flutterPickerConfiguration = FlutterPickerConfiguration.defaultConfiguration();
-        }
-        if (selectorStyle == null) {
-            selectorStyle = getSelectorStyle(flutterPickerConfiguration.getTintColor());
-        }
-        PictureSelector.create(mActivity)
-                .openGallery(SelectMimeType.ofVideo())
-                .setImageEngine(GlideEngine.createGlideEngine())
-                .setSelectorUIStyle(selectorStyle)
-                .setCameraInterceptListener(new MeOnCameraInterceptListener())
-                .setMaxVideoSelectNum(1)
-                .setMaxSelectNum(1)
-                .setRecordVideoMaxSecond(flutterPickerConfiguration.getVideoRecordingTimeLimit())
-                .setSelectMaxDurationSecond(flutterPickerConfiguration.getTrimmerMaxDuration())
-                .setCustomLoadingListener(getCustomLoadingListener())
-//                .setVideoPlayerEngine(new IjkPlayerEngine())
-                .forResult(new OnResultCallbackListener<LocalMedia>() {
-                    @Override
-                    public void onResult(ArrayList<LocalMedia> pickResult) {
-                        analyticalSelectResults(pickResult);
-                        LocalMedia localMedia = pickResult.get(0);
-                        // 处理返回结果
-                        // 获取视频缩略图
-                        getThumbnailAsync(getContext(), localMedia.getPath(), new ThumbnailCallback() {
-                            @Override
-                            public void onThumbnailReady(String thumbnailPath, int width, int height) {
-                                Log.i(TAG, "加载缩略图完成: " + thumbnailPath);
-                                VideoPickResult videoPickResult = new VideoPickResult();
-                                videoPickResult.setVideoPath(localMedia.getRealPath());
-                                videoPickResult.setThumbnailPath(thumbnailPath);
-                                videoPickResult.setThumbnailWidth(width);
-                                videoPickResult.setThumbnailHeight(height);
-                                videoPickResult.setDuration(((double) localMedia.getDuration()));
-                                result.success(videoPickResult.toMap());
-                            }
-
-                            @Override
-                            public void onThumbnailFailed() {
-                                Log.e(TAG, "加载缩略图失败");
-                                Pair<String, String> flutterCancelError = getFlutterDefaultError("加载视频缩略图的时候出现了错误");
-                                result.error(flutterCancelError.first, flutterCancelError.second, null);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onCancel() {
-                        // 处理取消操作
-                        Pair<String, String> flutterCancelError = getFlutterCancelError();
-                        result.error(flutterCancelError.first, flutterCancelError.second, null);
-                    }
-                });
-    }
-
-    private void selectMultiVideo(Object arguments, Result result) {
+    /**
+     * 选择视频
+     */
+    private void selectVideos(Object arguments, Result result) {
         FlutterPickerConfiguration flutterPickerConfiguration;
         if (arguments != null) {
             try {

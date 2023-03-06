@@ -11,17 +11,7 @@ class KangImagePicker {
     return await _methodChannel.invokeMethod<String>('getPlatformVersion');
   }
 
-  ///返回文件路径
-  // static Future<String?> selectSinglePhoto({
-  //   PickerConfiguration configuration = const PickerConfiguration(),
-  // }) async {
-  //   return await _methodChannel.invokeMethod<String?>(
-  //     'selectSinglePhoto',
-  //     configuration.toJson(),
-  //   );
-  // }
-
-  static Future<List<PhotoPickResult>?> selectMultiPhotos({
+  static Future<List<PhotoPickResult>?> selectPhotos({
     PickerConfiguration configuration = const PickerConfiguration(),
   }) async {
     final pickResultList = await _methodChannel.invokeMethod<List<Object?>>(
@@ -48,31 +38,11 @@ class KangImagePicker {
     return photoPickResultList;
   }
 
-  static Future<VideoPickResult?> selectVideo({
+  static Future<List<VideoPickResult>?> selectVideos({
     PickerConfiguration configuration = const PickerConfiguration(),
   }) async {
     final result = await _methodChannel.invokeMethod<Object?>(
-      'selectVideo',
-      configuration.toJson(),
-    );
-    VideoPickResult? videoSelectedResult;
-    if (result != null && result is Map) {
-      videoSelectedResult = VideoPickResult(
-        videoPath: result['videoPath'] as String,
-        thumbnailPath: result['thumbnailPath'] as String,
-        thumbnailWidth: result['thumbnailWidth'] as int,
-        thumbnailHeight: result['thumbnailHeight'] as int,
-        duration: result['duration'] as double,
-      );
-    }
-    return videoSelectedResult;
-  }
-
-  static Future<List<VideoPickResult>?> selectMultiVideo({
-    PickerConfiguration configuration = const PickerConfiguration(),
-  }) async {
-    final result = await _methodChannel.invokeMethod<Object?>(
-      'selectMultiVideo',
+      'selectVideos',
       configuration.toJson(),
     );
     if (result == null) {

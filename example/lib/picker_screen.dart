@@ -139,7 +139,7 @@ class _PickerScreenState extends State<PickerScreen> {
 
   void selectMulti() async {
     try {
-      final res = await KangImagePicker.selectMultiPhotos(
+      final res = await KangImagePicker.selectPhotos(
         configuration: const PickerConfiguration(
           mediaType: PickerMediaType.photo,
           showsPhotoFilters: true,
@@ -167,44 +167,11 @@ class _PickerScreenState extends State<PickerScreen> {
     }
   }
 
-  void selectVideo() async {
+  void selectVideos() async {
     try {
       await _playerController?.dispose();
       _playerController = null;
-      _selectedVideoResult = await KangImagePicker.selectVideo(
-        configuration: const PickerConfiguration(
-          mediaType: PickerMediaType.video,
-          showsPhotoFilters: true,
-          startOnScreen: PickerScreenEnum.video,
-          screens: [
-            PickerScreenEnum.library,
-            PickerScreenEnum.video,
-          ],
-          maxNumberOfItems: 1,
-          videoRecordingTimeLimit: 30,
-          trimmerMaxDuration: 30,
-        ),
-      );
-      print('视频选择结果：$_selectedVideoResult');
-      if (_selectedVideoResult == null) {
-        return;
-      }
-      _playerController = VideoPlayerController.file(File(
-        _selectedVideoResult!.videoPath,
-      ));
-      await _playerController!.initialize();
-      setState(() {});
-      await _playerController!.play();
-    } on PlatformException catch (e) {
-      print('出错了，${e}');
-    }
-  }
-
-  void selectMultiVideo() async {
-    try {
-      await _playerController?.dispose();
-      _playerController = null;
-      final res = await KangImagePicker.selectMultiVideo(
+      final res = await KangImagePicker.selectVideos(
         configuration: const PickerConfiguration(
           mediaType: PickerMediaType.video,
           showsPhotoFilters: true,
@@ -274,14 +241,13 @@ class _PickerScreenState extends State<PickerScreen> {
                       children: [
                         // _button('选择单个图片', selectOne, color: Colors.pinkAccent),
                         _button(
-                          '选择多个图片',
+                          '选择图片',
                           selectMulti,
                           color: Colors.indigoAccent,
                         ),
-                        _button('选择视频', selectVideo, color: Colors.greenAccent),
                         _button(
-                          '选择多个视频',
-                          selectMultiVideo,
+                          '选择视频',
+                          selectVideos,
                           color: Colors.green,
                         ),
                       ],
