@@ -498,31 +498,36 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 //            self.selectedItems = items
             guard let assetURL = items.singleVideo?.url else {
                 result(self.getFlutterSelectedButNotFoundError())
+                picker?.dismiss(animated: true, completion: nil)
                 return
             }
-            var videoResult: VideoPickResult
-            var duration: Double
-            var videoPath: String
-            if let avAsset = AVAsset(url: assetURL) as AVAsset? {
-                duration = avAsset.duration.seconds
+            if let saveImageResult = self.saveImage(items.singleVideo!.thumbnail) {
+                var videoResult: VideoPickResult
+                var duration: Double
+                var videoPath: String
+                if let avAsset = AVAsset(url: assetURL) as AVAsset? {
+                    duration = avAsset.duration.seconds
+                } else {
+                    duration = config.video.trimmerMaxDuration
+                }
+                if #available(iOS 16.0, *) {
+                    videoPath = assetURL.path()
+                } else {
+                    videoPath = assetURL.path
+                }
+                videoResult = VideoPickResult(
+                    videoPath: videoPath,
+                    duration: duration,
+                    thumbnailPath: saveImageResult.0,
+                    thumbnailWidth: saveImageResult.1,
+                    thumbnailHeight: saveImageResult.2
+                )
+                result(videoResult.toMap())
+                picker?.dismiss(animated: true, completion: nil)
             } else {
-                duration = config.video.trimmerMaxDuration
+                result(self.getFlutterDefaultError(msg: "获取视频缩略图失败"))
+                picker?.dismiss(animated: true, completion: nil)
             }
-            if #available(iOS 16.0, *) {
-                videoPath = assetURL.path()
-            } else {
-                videoPath = assetURL.path
-            }
-            videoResult = VideoPickResult(videoPath: videoPath, duration: duration)
-
-            if let result = self.saveImage(items.singleVideo!.thumbnail) {
-                videoResult.thumbnailPath = result.0
-                videoResult.thumbnailWidth = result.1
-                videoResult.thumbnailHeight = result.2
-            }
-            result(videoResult.toMap())
-
-            picker?.dismiss(animated: true, completion: nil)
         }
 
         vc!.present(picker, animated: true, completion: nil)
@@ -641,6 +646,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
+//            print("🤩选择了\(items.count)条视频")
             var resultFilePathList = [[String: Any?]]()
             let dispatchGroup = DispatchGroup()
             let queue = DispatchQueue.global(qos: .background)
@@ -652,30 +658,32 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                     case .photo(p: _):
                         dispatchGroup.leave()
                     case .video(v: let video):
-
-                        let assetURL = video.url
-                        var videoResult: VideoPickResult
-                        var duration: Double
-                        var videoPath: String
-                        if let avAsset = AVAsset(url: assetURL) as AVAsset? {
-                            duration = avAsset.duration.seconds
-                        } else {
-                            duration = config.video.trimmerMaxDuration
-                        }
-                        if #available(iOS 16.0, *) {
-                            videoPath = assetURL.path()
-                        } else {
-                            videoPath = assetURL.path
-                        }
-                        videoResult = VideoPickResult(videoPath: videoPath, duration: duration)
                         if let result = self.saveImage(video.thumbnail) {
-                            videoResult.thumbnailPath = result.0
-                            videoResult.thumbnailWidth = result.1
-                            videoResult.thumbnailHeight = result.2
+                            let assetURL = video.url
+                            var videoResult: VideoPickResult
+                            var duration: Double
+                            var videoPath: String
+                            if let avAsset = AVAsset(url: assetURL) as AVAsset? {
+                                duration = avAsset.duration.seconds
+                            } else {
+                                duration = config.video.trimmerMaxDuration
+                            }
+                            if #available(iOS 16.0, *) {
+                                videoPath = assetURL.path()
+                            } else {
+                                videoPath = assetURL.path
+                            }
+                            videoResult = VideoPickResult(
+                                videoPath: videoPath,
+                                duration: duration,
+                                thumbnailPath: result.0,
+                                thumbnailWidth: result.1,
+                                thumbnailHeight: result.2
+                            )
                             resultFilePathList.append(videoResult.toMap())
                             dispatchGroup.leave()
                         } else {
-                            resultFilePathList.append(videoResult.toMap())
+                            print("🤖 保存视频缩略图失败")
                             dispatchGroup.leave()
                         }
                     }

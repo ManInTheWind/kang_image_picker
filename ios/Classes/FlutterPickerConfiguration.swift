@@ -8,12 +8,13 @@
 import Foundation
 import YPImagePicker
 
-struct VideoPickResult {
+struct VideoPickResult:CustomStringConvertible {
+
     var videoPath: String
     var duration: Double
-    var thumbnailPath: String?
-    var thumbnailWidth: Int?
-    var thumbnailHeight: Int?
+    var thumbnailPath: String
+    var thumbnailWidth: Int
+    var thumbnailHeight: Int
 
     func toMap() -> [String: Any?] {
         var map = [String: Any?]()
@@ -24,6 +25,19 @@ struct VideoPickResult {
         map["thumbnailHeight"] = thumbnailHeight
         return map
     }
+    
+    var description: String{
+        return """
+        VideoPickResult{
+            videoPath:\(videoPath)
+            duration:\(duration)
+            thumbnailPath:\(String(describing: thumbnailPath))
+            thumbnailWidth:\(String(describing: thumbnailWidth))
+            thumbnailHeight:\(String(describing: thumbnailHeight))
+        }
+        """
+    }
+    
 }
 
 class FlutterPickerConfiguration: CustomStringConvertible {

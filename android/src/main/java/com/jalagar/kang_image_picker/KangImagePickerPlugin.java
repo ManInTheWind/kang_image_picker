@@ -286,37 +286,27 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                         analyticalSelectResults(pickResult);
                         LocalMedia localMedia = pickResult.get(0);
                         // 处理返回结果
+                        // 获取视频缩略图
+                        getThumbnailAsync(getContext(), localMedia.getPath(), new ThumbnailCallback() {
+                            @Override
+                            public void onThumbnailReady(String thumbnailPath, int width, int height) {
+                                Log.i(TAG, "加载缩略图完成: " + thumbnailPath);
+                                VideoPickResult videoPickResult = new VideoPickResult();
+                                videoPickResult.setVideoPath(localMedia.getRealPath());
+                                videoPickResult.setThumbnailPath(thumbnailPath);
+                                videoPickResult.setThumbnailWidth(width);
+                                videoPickResult.setThumbnailHeight(height);
+                                videoPickResult.setDuration(((double) localMedia.getDuration()));
+                                result.success(videoPickResult.toMap());
+                            }
 
-                        if (localMedia.getVideoThumbnailPath() == null) {
-                            getThumbnailAsync(getContext(), localMedia.getPath(), new ThumbnailCallback() {
-                                @Override
-                                public void onThumbnailReady(String thumbnailPath, int width, int height) {
-                                    Log.i(TAG, "加载缩略图完成: " + thumbnailPath);
-                                    Map<String, Object> videoSelectResultMap = new HashMap<>();
-                                    videoSelectResultMap.put("videoPath", localMedia.getRealPath());
-                                    videoSelectResultMap.put("thumbnailPath", thumbnailPath);
-                                    videoSelectResultMap.put("thumbnailWidth", width);
-                                    videoSelectResultMap.put("thumbnailHeight", height);
-                                    videoSelectResultMap.put("duration", ((double) localMedia.getDuration()));
-                                    result.success(videoSelectResultMap);
-                                }
-
-                                @Override
-                                public void onThumbnailFailed() {
-                                    Log.e(TAG, "加载缩略图失败");
-                                    Pair<String, String> flutterCancelError = getFlutterDefaultError("加载视频缩略图的时候出现了错误");
-                                    result.error(flutterCancelError.first, flutterCancelError.second, null);
-                                }
-                            });
-                        } else {
-                            Map<String, Object> videoSelectResultMap = new HashMap<>();
-                            videoSelectResultMap.put("videoPath", localMedia.getRealPath());
-                            videoSelectResultMap.put("thumbnailPath", localMedia.getVideoThumbnailPath());
-                            videoSelectResultMap.put("thumbnailWidth", localMedia.getWidth());
-                            videoSelectResultMap.put("thumbnailHeight", localMedia.getHeight());
-                            videoSelectResultMap.put("duration", ((double) localMedia.getDuration()));
-                            result.success(videoSelectResultMap);
-                        }
+                            @Override
+                            public void onThumbnailFailed() {
+                                Log.e(TAG, "加载缩略图失败");
+                                Pair<String, String> flutterCancelError = getFlutterDefaultError("加载视频缩略图的时候出现了错误");
+                                result.error(flutterCancelError.first, flutterCancelError.second, null);
+                            }
+                        });
                     }
 
                     @Override
@@ -367,14 +357,14 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                                 @Override
                                 public void onThumbnailReady(String thumbnailPath, int width, int height) {
                                     Log.e(TAG, "加载缩略图完成，线程：" + Thread.currentThread().getName());
-                                    Map<String, Object> videoSelectResultMap = new HashMap<>();
-                                    videoSelectResultMap.put("videoPath", mediaItem.getRealPath());
-                                    videoSelectResultMap.put("duration", ((double) mediaItem.getDuration()));
-                                    videoSelectResultMap.put("thumbnailPath", thumbnailPath);
-                                    videoSelectResultMap.put("thumbnailWidth", width);
-                                    videoSelectResultMap.put("thumbnailHeight", height);
+                                    VideoPickResult videoPickResult = new VideoPickResult();
+                                    videoPickResult.setVideoPath(mediaItem.getRealPath());
+                                    videoPickResult.setThumbnailPath(thumbnailPath);
+                                    videoPickResult.setThumbnailWidth(width);
+                                    videoPickResult.setThumbnailHeight(height);
+                                    videoPickResult.setDuration(((double) mediaItem.getDuration()));
                                     synchronized (videoSelectResultList) {
-                                        videoSelectResultList.add(videoSelectResultMap);
+                                        videoSelectResultList.add(videoPickResult.toMap());
                                     }
                                     if (videoSelectResultList.size() == pickResult.size()) {
                                         if (videoSelectResultList.contains(null)) {
@@ -405,10 +395,6 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                                     synchronized (videoSelectResultList) {
                                         videoSelectResultList.add(null);
                                     }
-//                                    Pair<String, String> defaultError = getFlutterDefaultError("加载缩略图失败");
-//                                    if (videoSelectResultList.size() == pickResult.size()) {
-//                                        result.error(defaultError.first, defaultError.second, null);
-//                                    }
 
                                 }
                             });
@@ -593,7 +579,6 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             camera.setVideoFrameRate(25);
             camera.setVideoBitRate(3 * 1024 * 1024);
             camera.isDisplayRecordChangeTime(true);
-            ///TODO:设置为tineColor
             if (flutterPickerConfiguration != null && flutterPickerConfiguration.getTintColor() != null) {
                 camera.setCaptureLoadingColor(Color.parseColor(flutterPickerConfiguration.getTintColor()));
             }
