@@ -5,8 +5,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kang_image_picker/kang_image_picker.dart';
+import 'package:kang_image_picker/model/photo_pick_result.dart';
 import 'package:kang_image_picker/model/picker_configuration.dart';
-import 'package:kang_image_picker/model/video_selected_result.dart';
+import 'package:kang_image_picker/model/video_pick_result.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:video_player/video_player.dart';
@@ -23,7 +24,7 @@ class _PickerScreenState extends State<PickerScreen> {
 
   final List<FileImage> _selectedImageList = [];
   final List<String> _selectedImagePathList = [];
-  VideoSelectedResult? _selectedVideoResult;
+  VideoPickResult? _selectedVideoResult;
 
   VideoPlayerController? _playerController;
 
@@ -110,31 +111,31 @@ class _PickerScreenState extends State<PickerScreen> {
     );
   }
 
-  void selectOne() async {
-    try {
-      final path = await KangImagePicker.selectSinglePhoto(
-        configuration: const PickerConfiguration(
-          mediaType: PickerMediaType.photo,
-          showsPhotoFilters: true,
-          startOnScreen: PickerScreenEnum.library,
-          screens: [
-            PickerScreenEnum.library,
-            PickerScreenEnum.photo,
-          ],
-          cropRatio: 1 / 1,
-        ),
-      );
-      if (path == null) {
-        print('结果为空');
-        return;
-      }
-      _selectedImagePathList.add(path);
-      _selectedImageList.add(FileImage(File(path)));
-      setState(() {});
-    } on PlatformException catch (e) {
-      print('出错了，${e}');
-    }
-  }
+  // void selectOne() async {
+  //   try {
+  //     final resultList = await KangImagePicker.selectSinglePhoto(
+  //       configuration: const PickerConfiguration(
+  //         mediaType: PickerMediaType.photo,
+  //         showsPhotoFilters: true,
+  //         startOnScreen: PickerScreenEnum.library,
+  //         screens: [
+  //           PickerScreenEnum.library,
+  //           PickerScreenEnum.photo,
+  //         ],
+  //         cropRatio: 1 / 1,
+  //       ),
+  //     );
+  //     if (path == null) {
+  //       print('结果为空');
+  //       return;
+  //     }
+  //     _selectedImagePathList.add(path);
+  //     _selectedImageList.add(FileImage(File(path)));
+  //     setState(() {});
+  //   } on PlatformException catch (e) {
+  //     print('出错了，${e}');
+  //   }
+  // }
 
   void selectMulti() async {
     try {
@@ -155,9 +156,10 @@ class _PickerScreenState extends State<PickerScreen> {
         print('结果为空');
         return;
       }
-      for (final String path in res) {
-        _selectedImagePathList.add(path);
-        _selectedImageList.add(FileImage(File(path)));
+      for (PhotoPickResult pickResult in res) {
+        print('图片选择结果：$pickResult');
+        _selectedImagePathList.add(pickResult.path);
+        _selectedImageList.add(FileImage(File(pickResult.path)));
       }
       setState(() {});
     } on PlatformException catch (e) {
@@ -270,7 +272,7 @@ class _PickerScreenState extends State<PickerScreen> {
                   children: [
                     Column(
                       children: [
-                        _button('选择单个图片', selectOne, color: Colors.pinkAccent),
+                        // _button('选择单个图片', selectOne, color: Colors.pinkAccent),
                         _button(
                           '选择多个图片',
                           selectMulti,
@@ -314,20 +316,13 @@ class _PickerScreenState extends State<PickerScreen> {
   }
 
   Widget _buildVideoResultView() {
-    Widget? leading;
-    if (_selectedVideoResult!.thumbnailPath != null) {
-      leading = Image.file(File(_selectedVideoResult!.thumbnailPath!));
-      double aspectRatio = 1.0;
-      if (_selectedVideoResult!.thumbnailWidth != null &&
-          _selectedVideoResult!.thumbnailHeight != null) {
-        aspectRatio = _selectedVideoResult!.thumbnailWidth! /
-            _selectedVideoResult!.thumbnailHeight!;
-      }
-      leading = AspectRatio(
-        aspectRatio: aspectRatio,
-        child: leading,
-      );
-    }
+    Widget? leading = Image.file(File(_selectedVideoResult!.thumbnailPath));
+    double aspectRatio = _selectedVideoResult!.thumbnailWidth /
+        _selectedVideoResult!.thumbnailHeight;
+    leading = AspectRatio(
+      aspectRatio: aspectRatio,
+      child: leading,
+    );
     return Flexible(
       child: ListTile(
         leading: leading,

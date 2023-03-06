@@ -29,10 +29,10 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
-        case "selectSinglePhoto":
-            selectSinglePhoto(arguments: call.arguments, result)
-        case "selectMultiPhotos":
-            selectMultiPhotos(arguments: call.arguments, result)
+//        case "selectSinglePhoto":
+//            selectSinglePhoto(arguments: call.arguments, result)
+        case "selectPhotos":
+            selectPhotos(arguments: call.arguments, result)
         case "selectVideo":
             selectVideo(arguments: call.arguments, result)
         case "selectMultiVideo":
@@ -218,7 +218,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         vc!.present(picker, animated: true, completion: nil)
     }
 
-    func selectMultiPhotos(arguments: Any?, _ result: @escaping FlutterResult) {
+    func selectPhotos(arguments: Any?, _ result: @escaping FlutterResult) {
         var flutterPickConfiguration: FlutterPickerConfiguration
         if let arguments = arguments as? [String: Any?] {
             flutterPickConfiguration = FlutterPickerConfiguration(dict: arguments)
@@ -322,7 +322,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
             self.selectedItems = items
 
-            var resultFilePathList = [String]()
+            var pickResultList = [[String: Any?]]()
             let dispatchGroup = DispatchGroup()
             let queue = DispatchQueue.global()
             for item: YPMediaItem in items {
@@ -334,11 +334,20 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                             if let photoInAlbum = self.getPHAsset(inAlbumNamed: albumName) {
                                 photoInAlbum.getURL { responseURL in
                                     if let url = responseURL {
+                                        var photoPath: String
                                         if #available(iOS 16.0, *) {
-                                            resultFilePathList.append(url.path())
+                                            photoPath = url.path()
                                         } else {
-                                            resultFilePathList.append(url.path)
+//                                            resultFilePathList.append(url.path)
+                                            photoPath = url.path
                                         }
+                                        let pickResult = PhotoPickResult(
+                                            path: photoPath,
+                                            width: Int(photo.image.size.width),
+                                            height: Int(photo.image.size.height),
+                                            filename: photo.asset?.originalFilename
+                                        )
+                                        pickResultList.append(pickResult.toMap())
                                     }
                                     dispatchGroup.leave()
                                 }
@@ -347,35 +356,53 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                             }
                         }
                     } else if photo.asset == nil {
-                        result(self.getFlutterSelectedButNotFoundError())
+//                        result(self.getFlutterSelectedButNotFoundError())
                         dispatchGroup.leave()
                     } else {
                         photo.asset!.getURL(completionHandler: { (responseURL: URL?) in
-                            if responseURL == nil {
-                                result(self.getFlutterSelectedButNotFoundError())
-                            } else {
+                            if let url = responseURL {
+                                var photoPath: String
                                 if #available(iOS 16.0, *) {
-                                    resultFilePathList.append(responseURL!.path())
+                                    photoPath = url.path()
                                 } else {
-                                    resultFilePathList.append(responseURL!.path)
+                                    photoPath = url.path
                                 }
+                                let pickResult = PhotoPickResult(
+                                    path: photoPath,
+                                    width: Int(photo.image.size.width),
+                                    height: Int(photo.image.size.height),
+                                    filename: photo.asset?.originalFilename
+                                )
+                                print("📷 pickResult:\(String(describing: pickResult))")
+                                pickResultList.append(pickResult.toMap())
                             }
+
+//                            if responseURL == nil {
+//                                result(self.getFlutterSelectedButNotFoundError())
+//                            } else {
+//                                if #available(iOS 16.0, *) {
+//                                    resultFilePathList.append(responseURL!.path())
+//                                } else {
+//                                    resultFilePathList.append(responseURL!.path)
+//                                }
+//                            }
                             dispatchGroup.leave()
                         })
                     }
 
-                case .video(v: let video):
-                    let assetURL = video.url
-                    if #available(iOS 16.0, *) {
-                        resultFilePathList.append(assetURL.path())
-                    } else {
-                        resultFilePathList.append(assetURL.path)
-                    }
+                case .video(v: _):
+//                    let assetURL = video.url
+//                    if #available(iOS 16.0, *) {
+//                        resultFilePathList.append(assetURL.path())
+//                    } else {
+//                        resultFilePathList.append(assetURL.path)
+//                    }
                     dispatchGroup.leave()
                 }
             }
             dispatchGroup.notify(queue: DispatchQueue.main) {
-                result(resultFilePathList)
+                result(pickResultList)
+                print("🤩选择了\(pickResultList.count)张照片")
                 picker?.dismiss(animated: true)
             }
         }
@@ -811,6 +838,7 @@ extension PHAsset {
                 true
             }
             requestContentEditingInput(with: options, completionHandler: { (contentEditingInput: PHContentEditingInput?, _: [AnyHashable: Any]) in
+
                 completionHandler(contentEditingInput!.fullSizeImageURL as URL?)
             })
         } else if mediaType == .video {

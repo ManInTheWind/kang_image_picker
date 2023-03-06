@@ -8,38 +8,6 @@
 import Foundation
 import YPImagePicker
 
-struct VideoPickResult:CustomStringConvertible {
-
-    var videoPath: String
-    var duration: Double
-    var thumbnailPath: String
-    var thumbnailWidth: Int
-    var thumbnailHeight: Int
-
-    func toMap() -> [String: Any?] {
-        var map = [String: Any?]()
-        map["videoPath"] = videoPath
-        map["duration"] = duration
-        map["thumbnailPath"] = thumbnailPath
-        map["thumbnailWidth"] = thumbnailWidth
-        map["thumbnailHeight"] = thumbnailHeight
-        return map
-    }
-    
-    var description: String{
-        return """
-        VideoPickResult{
-            videoPath:\(videoPath)
-            duration:\(duration)
-            thumbnailPath:\(String(describing: thumbnailPath))
-            thumbnailWidth:\(String(describing: thumbnailWidth))
-            thumbnailHeight:\(String(describing: thumbnailHeight))
-        }
-        """
-    }
-    
-}
-
 class FlutterPickerConfiguration: CustomStringConvertible {
     /// 选择库中可用的媒体类型。默认为.photo
     var mediaType: YPlibraryMediaType

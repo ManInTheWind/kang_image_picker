@@ -148,11 +148,11 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             case "getPlatformVersion":
                 result.success("Android " + android.os.Build.VERSION.RELEASE);
                 break;
-            case "selectSinglePhoto":
-                selectSinglePhoto(call.arguments, result);
-                break;
-            case "selectMultiPhotos":
-                selectMultiPhotos(call.arguments, result);
+//            case "selectSinglePhoto":
+//                selectSinglePhoto(call.arguments, result);
+//                break;
+            case "selectPhotos":
+                selectPhotos(call.arguments, result);
                 break;
             case "selectVideo":
                 selectVideo(call.arguments, result);
@@ -208,7 +208,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
         });
     }
 
-    private void selectMultiPhotos(Object arguments, Result result) {
+    private void selectPhotos(Object arguments, Result result) {
         FlutterPickerConfiguration flutterPickerConfiguration;
         if (arguments != null) {
             try {
@@ -235,10 +235,16 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                     @Override
                     public void onResult(ArrayList<LocalMedia> pickResult) {
                         analyticalSelectResults(pickResult);
-                        List<String> paths = new ArrayList<>();
+                        List<Map<String, Object>> paths = new ArrayList<>();
                         for (LocalMedia localMedia : pickResult) {
                             // 处理返回结果
-                            paths.add(localMedia.getRealPath());
+                            PhotoPickResult photoPickResult = new PhotoPickResult();
+                            photoPickResult.setPath(localMedia.getRealPath());
+                            photoPickResult.setWidth(localMedia.getWidth());
+                            photoPickResult.setHeight(localMedia.getHeight());
+                            photoPickResult.setFilename(localMedia.getFileName());
+                            photoPickResult.setMimeType(localMedia.getMimeType());
+                            paths.add(photoPickResult.toMap());
                         }
                         result.success(paths);
                     }

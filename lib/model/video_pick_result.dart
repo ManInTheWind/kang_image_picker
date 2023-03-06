@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 
 @immutable
-class VideoSelectedResult {
+class VideoPickResult {
   final String videoPath;
   final String thumbnailPath;
   final int thumbnailWidth;
   final int thumbnailHeight;
   final double duration;
 
-  const VideoSelectedResult({
+  const VideoPickResult({
     required this.videoPath,
     required this.thumbnailPath,
     required this.thumbnailWidth,
@@ -18,6 +18,6 @@ class VideoSelectedResult {
 
   @override
   String toString() {
-    return 'VideoSelectedResult{videoPath: $videoPath, thumbnailPath: $thumbnailPath, thumbnailWidth: $thumbnailWidth, thumbnailHeight: $thumbnailHeight, duration: $duration}';
+    return 'VideoPickResult{videoPath: $videoPath, thumbnailPath: $thumbnailPath, thumbnailWidth: $thumbnailWidth, thumbnailHeight: $thumbnailHeight, duration: $duration}';
   }
 }
