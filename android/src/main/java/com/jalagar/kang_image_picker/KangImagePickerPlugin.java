@@ -258,6 +258,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                                     Log.e(TAG, "加载缩略图完成，线程：" + Thread.currentThread().getName());
                                     VideoPickResult videoPickResult = new VideoPickResult();
                                     videoPickResult.setVideoPath(mediaItem.getRealPath());
+                                    videoPickResult.setVideoFilename(mediaItem.getFileName());
                                     videoPickResult.setThumbnailPath(thumbnailPath);
                                     videoPickResult.setThumbnailFilename(filename);
                                     videoPickResult.setThumbnailWidth(width);

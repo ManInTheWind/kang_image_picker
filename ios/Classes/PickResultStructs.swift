@@ -7,16 +7,14 @@
 
 import Foundation
 
+struct PhotoPickResult: CustomStringConvertible {
+    var id: String
+    var path: String
+    var width: Int
+    var height: Int
+    var filename: String?
+    var mimeType: String?
 
-struct PhotoPickResult:CustomStringConvertible{
-    
-    var id:String
-    var path:String
-    var width:Int
-    var height:Int
-    var filename:String?
-    var mimeType:String?
-    
     func toMap() -> [String: Any?] {
         var map = [String: Any?]()
         map["id"] = id
@@ -27,8 +25,8 @@ struct PhotoPickResult:CustomStringConvertible{
         map["mimeType"] = mimeType
         return map
     }
-    
-    var description: String{
+
+    var description: String {
         return """
         PhotoPickResult{
             id:\(id)
@@ -42,9 +40,9 @@ struct PhotoPickResult:CustomStringConvertible{
     }
 }
 
-struct VideoPickResult:CustomStringConvertible {
-
+struct VideoPickResult: CustomStringConvertible {
     var videoPath: String
+    var videoFilename: String
     var duration: Double
     var thumbnailPath: String
     var thumbnailFilename: String
@@ -54,6 +52,7 @@ struct VideoPickResult:CustomStringConvertible {
     func toMap() -> [String: Any?] {
         var map = [String: Any?]()
         map["videoPath"] = videoPath
+        map["videoFilename"] = videoFilename
         map["duration"] = duration
         map["thumbnailPath"] = thumbnailPath
         map["thumbnailFilename"] = thumbnailFilename
@@ -61,11 +60,12 @@ struct VideoPickResult:CustomStringConvertible {
         map["thumbnailHeight"] = thumbnailHeight
         return map
     }
-    
-    var description: String{
+
+    var description: String {
         return """
         VideoPickResult{
             videoPath:\(videoPath)
+            videoFilename:\(videoFilename)
             duration:\(duration)
             thumbnailPath:\(String(describing: thumbnailPath))
             thumbnailWidth:\(String(describing: thumbnailWidth))
@@ -73,5 +73,4 @@ struct VideoPickResult:CustomStringConvertible {
         }
         """
     }
-    
 }

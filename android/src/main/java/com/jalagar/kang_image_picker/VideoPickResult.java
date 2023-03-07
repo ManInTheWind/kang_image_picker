@@ -5,6 +5,8 @@ import java.util.Map;
 
 public class VideoPickResult {
     private String videoPath;
+
+    private String videoFilename;
     private Double duration;
 
     private String thumbnailFilename;
@@ -20,6 +22,13 @@ public class VideoPickResult {
         this.videoPath = videoPath;
     }
 
+    public String getVideoFilename() {
+        return videoFilename;
+    }
+
+    public void setVideoFilename(String videoFilename) {
+        this.videoFilename = videoFilename;
+    }
 
     public Double getDuration() {
         return duration;
@@ -65,6 +74,7 @@ public class VideoPickResult {
         return new HashMap<String, Object>() {
             {
                 put("videoPath", videoPath);
+                put("videoFilename", videoFilename);
                 put("thumbnailFilename", thumbnailFilename);
                 put("thumbnailPath", thumbnailPath);
                 put("thumbnailWidth", thumbnailWidth);

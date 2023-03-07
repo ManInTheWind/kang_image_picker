@@ -376,6 +376,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                             }
                             videoResult = VideoPickResult(
                                 videoPath: videoPath,
+                                videoFilename: video.asset!.originalFilename!,
                                 duration: duration,
                                 thumbnailPath: result.0,
                                 thumbnailFilename: result.1,
