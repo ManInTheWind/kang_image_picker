@@ -66,8 +66,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         /* Defines the name of the album when saving pictures in the user's photo library.
          In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName" */
         /* 定义保存图片到用户的照片库中的相册名称。通常是您的应用程序名称。默认为“DefaultYPImagePickerAlbumName” */
-        let albumName = Bundle.main.infoDictionary!["CFBundleName"] as! String
-        config.albumName = albumName
+        let bundleName =  Bundle.main.infoDictionary!["CFBundleName"] as! String;
+        config.albumName = bundleName
 
         /* 定义启动时显示哪个屏幕。只有在`showsVideo = true`时才会使用视频模式。默认值为`.photo` */
         config.startOnScreen = flutterPickConfiguration.startOnScreen
@@ -118,8 +118,22 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         config.wordings.next = "下一步"
         config.wordings.crop = "裁剪"
         config.wordings.save = "完成"
+        config.wordings.processing = "正在处理中"
+        config.wordings.warningMaxItemsLimit = "所选照片超过最大可选数量"
+        config.wordings.albumsTitle = "相簿"
         config.wordings.libraryTitle = "图库"
         config.wordings.cameraTitle = "相机"
+        config.wordings.videoTitle = "视频"
+        config.wordings.trim = "裁剪"
+        config.wordings.cover = "封面"
+        config.wordings.filter = "滤镜"
+        config.wordings.videoDurationPopup.title = "提示"
+        config.wordings.videoDurationPopup.tooShortMessage = "录制时间过短"
+        config.wordings.videoDurationPopup.tooLongMessage = "录制时间过长"
+        config.wordings.permissionPopup.title = "提示"
+        config.wordings.permissionPopup.message = "\(bundleName)想要访问您的媒体资源权限以用作发表推文,更新头像等操作"
+        config.wordings.permissionPopup.cancel = "取消"
+        config.wordings.permissionPopup.grantPermission = "允许"
 
         let picker = YPImagePicker(configuration: config)
 
@@ -137,6 +151,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
             if cancelled {
                 print("Picker was canceled")
                 result(nil)
+                self.selectedItems = nil
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
@@ -152,7 +167,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 case .photo(p: let photo):
                     if photo.fromCamera, photo.asset == nil {
                         queue.asyncAfter(deadline: .now() + 0.8) {
-                            if let photoInAlbum = self.getPHAsset(inAlbumNamed: albumName) {
+                            if let photoInAlbum = self.getPHAsset(inAlbumNamed: bundleName) {
                                 photoInAlbum.getURL { responseURL in
                                     if let url = responseURL {
                                         var photoPath: String
@@ -223,6 +238,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 result(pickResultList)
                 print("🤩选择了\(pickResultList.count)张照片")
                 picker?.dismiss(animated: true)
+                queue.asyncAfter(deadline: .now() + 20) {
+                    self.selectedItems = nil
+                }
             }
         }
         vc!.present(picker, animated: true, completion: nil)
@@ -257,7 +275,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
          In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName" */
         /* 定义保存图片到用户的照片库中的相册名称。通常是您的应用程序名称。默认为“DefaultYPImagePickerAlbumName” */
         // config.albumName = "ThisIsMyAlbum"
-        config.albumName = Bundle.main.infoDictionary!["CFBundleName"] as! String
+        let bundleName = Bundle.main.infoDictionary!["CFBundleName"] as! String
+        config.albumName = bundleName
         config.shouldSaveNewPicturesToAlbum = true
 
         /* Defines which screen is shown at launch. Video mode will only work if `showsVideo = true`.
@@ -297,9 +316,22 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         config.wordings.next = "下一步"
         config.wordings.crop = "裁剪"
         config.wordings.save = "完成"
+        config.wordings.processing = "正在处理中"
+        config.wordings.warningMaxItemsLimit = "所选照片超过最大可选数量"
+        config.wordings.albumsTitle = "相簿"
         config.wordings.libraryTitle = "图库"
         config.wordings.cameraTitle = "相机"
         config.wordings.videoTitle = "视频"
+        config.wordings.trim = "裁剪"
+        config.wordings.cover = "封面"
+        config.wordings.filter = "滤镜"
+        config.wordings.videoDurationPopup.title = "提示"
+        config.wordings.videoDurationPopup.tooShortMessage = "录制时间过短"
+        config.wordings.videoDurationPopup.tooLongMessage = "录制时间过长"
+        config.wordings.permissionPopup.title = "提示"
+        config.wordings.permissionPopup.message = "\(bundleName)想要访问您的媒体资源权限以用作发表推文,更新头像等操作"
+        config.wordings.permissionPopup.cancel = "取消"
+        config.wordings.permissionPopup.grantPermission = "允许"
 
         /* 颜色 */
         if let tintColor = flutterPickConfiguration.tintColor {
@@ -338,6 +370,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
             if cancelled {
                 print("Picker was canceled")
                 result(nil)
+                self.selectedItems = nil
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
@@ -389,6 +422,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
             dispatchGroup.notify(queue: DispatchQueue.main) {
                 result(resultFilePathList)
                 picker?.dismiss(animated: true)
+                queue.asyncAfter(deadline: .now() + 20) {
+                    self.selectedItems = nil
+                }
             }
         }
 
