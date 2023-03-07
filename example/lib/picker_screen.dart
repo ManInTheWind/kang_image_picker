@@ -142,13 +142,13 @@ class _PickerScreenState extends State<PickerScreen> {
       final res = await KangImagePicker.selectPhotos(
         configuration: const PickerConfiguration(
           mediaType: PickerMediaType.photo,
-          showsPhotoFilters: true,
+          showsPhotoFilters: false,
           startOnScreen: PickerScreenEnum.photo,
           screens: [
             PickerScreenEnum.photo,
             PickerScreenEnum.library,
           ],
-          cropRatio: 16 / 9,
+          // cropRatio: 16 / 9,
           maxNumberOfItems: 9,
         ),
       );

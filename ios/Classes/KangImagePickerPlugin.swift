@@ -53,7 +53,6 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
             result(getFlutterDefaultError(msg: "打开失败，获取FlutterViewController失败"))
             return
         }
-
         /* Choose what media types are available in the library. Defaults to `.photo` */
         /* 选择库中可用的媒体类型。默认为.photo */
         config.library.mediaType = flutterPickConfiguration.mediaType
@@ -160,7 +159,6 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                         if #available(iOS 16.0, *) {
                                             photoPath = url.path()
                                         } else {
-//                                            resultFilePathList.append(url.path)
                                             photoPath = url.path
                                         }
 
@@ -180,7 +178,6 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                             }
                         }
                     } else if photo.asset == nil {
-//                        result(self.getFlutterSelectedButNotFoundError())
                         dispatchGroup.leave()
                     } else {
                         photo.asset!.getURL(completionHandler: { (responseURL: URL?) in
@@ -191,37 +188,34 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                 } else {
                                     photoPath = url.path
                                 }
+                                var width: Int
+                                var height: Int
+                                if photo.modifiedImage == nil {
+                                    width = photo.asset!.pixelWidth
+                                    height = photo.asset!.pixelHeight
+                                } else {
+                                    width = Int(photo.image.size.width)
+                                    height = Int(photo.image.size.height)
+                                }
+//                                print("image:\(photo.image.size)")
+//                                print("originalImage:\(photo.originalImage.size)")
+//                                print("pickResult image size :\(width)*\(height)")
                                 let pickResult = PhotoPickResult(
                                     id: photo.asset!.localIdentifier,
                                     path: photoPath,
-                                    width: Int(photo.image.size.width),
-                                    height: Int(photo.image.size.height),
+                                    width: width,
+                                    height: height,
                                     filename: photo.asset?.originalFilename
                                 )
+
                                 print("📷 pickResult:\(String(describing: pickResult))")
                                 pickResultList.append(pickResult.toMap())
                             }
-
-//                            if responseURL == nil {
-//                                result(self.getFlutterSelectedButNotFoundError())
-//                            } else {
-//                                if #available(iOS 16.0, *) {
-//                                    resultFilePathList.append(responseURL!.path())
-//                                } else {
-//                                    resultFilePathList.append(responseURL!.path)
-//                                }
-//                            }
                             dispatchGroup.leave()
                         })
                     }
 
                 case .video(v: _):
-//                    let assetURL = video.url
-//                    if #available(iOS 16.0, *) {
-//                        resultFilePathList.append(assetURL.path())
-//                    } else {
-//                        resultFilePathList.append(assetURL.path)
-//                    }
                     dispatchGroup.leave()
                 }
             }
