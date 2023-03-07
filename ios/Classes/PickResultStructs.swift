@@ -10,6 +10,7 @@ import Foundation
 
 struct PhotoPickResult:CustomStringConvertible{
     
+    var id:String
     var path:String
     var width:Int
     var height:Int
@@ -18,6 +19,7 @@ struct PhotoPickResult:CustomStringConvertible{
     
     func toMap() -> [String: Any?] {
         var map = [String: Any?]()
+        map["id"] = id
         map["path"] = path
         map["width"] = width
         map["height"] = height
@@ -29,6 +31,7 @@ struct PhotoPickResult:CustomStringConvertible{
     var description: String{
         return """
         PhotoPickResult{
+            id:\(id)
             path:\(path)
             width:\(width)
             height:\(height)

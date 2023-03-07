@@ -148,9 +148,6 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             case "getPlatformVersion":
                 result.success("Android " + android.os.Build.VERSION.RELEASE);
                 break;
-//            case "selectSinglePhoto":
-//                selectSinglePhoto(call.arguments, result);
-//                break;
             case "selectPhotos":
                 selectPhotos(call.arguments, result);
                 break;
@@ -197,6 +194,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                         for (LocalMedia localMedia : pickResult) {
                             // 处理返回结果
                             PhotoPickResult photoPickResult = new PhotoPickResult();
+                            photoPickResult.setId(Long.toString(localMedia.getId()));
                             photoPickResult.setPath(localMedia.getRealPath());
                             photoPickResult.setWidth(localMedia.getWidth());
                             photoPickResult.setHeight(localMedia.getHeight());
@@ -215,6 +213,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                     }
                 });
     }
+
     /**
      * 选择视频
      */

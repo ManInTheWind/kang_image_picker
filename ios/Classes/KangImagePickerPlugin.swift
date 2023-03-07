@@ -163,7 +163,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 //                                            resultFilePathList.append(url.path)
                                             photoPath = url.path
                                         }
+                                        
                                         let pickResult = PhotoPickResult(
+                                            id: photo.asset!.localIdentifier,
                                             path: photoPath,
                                             width: Int(photo.image.size.width),
                                             height: Int(photo.image.size.height),
@@ -190,6 +192,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                     photoPath = url.path
                                 }
                                 let pickResult = PhotoPickResult(
+                                    id: photo.asset!.localIdentifier,
                                     path: photoPath,
                                     width: Int(photo.image.size.width),
                                     height: Int(photo.image.size.height),

@@ -4,11 +4,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PhotoPickResult {
+    private String id;
     private String path;
     private Integer width;
     private Integer height;
     private String filename;
     private String mimeType;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getPath() {
         return path;
@@ -53,6 +62,7 @@ public class PhotoPickResult {
     public Map<String, Object> toMap() {
         return new HashMap<String, Object>() {
             {
+                put("id", id);
                 put("path", path);
                 put("width", width);
                 put("height", height);

@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 
 @immutable
 class PhotoPickResult {
+  /// iOS:PHAssets.localIdentifier
+  /// Android: file Id
+  final String id;
   final String path;
   final int width;
   final int height;
@@ -9,6 +12,7 @@ class PhotoPickResult {
   final String? mimeType;
 
   const PhotoPickResult({
+    required this.id,
     required this.path,
     required this.width,
     required this.height,
@@ -18,6 +22,6 @@ class PhotoPickResult {
 
   @override
   String toString() {
-    return 'PhotoPickResult{path: $path, width: $width, height: $height, filename: $filename, mimeType: $mimeType}';
+    return 'PhotoPickResult{id: $id,path: $path, width: $width, height: $height, filename: $filename, mimeType: $mimeType}';
   }
 }

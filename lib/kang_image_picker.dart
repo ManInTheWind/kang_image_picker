@@ -26,6 +26,7 @@ class KangImagePicker {
     for (Object? result in pickResultList) {
       if (result != null && result is Map) {
         final photoPickResult = PhotoPickResult(
+          id: result['id'] as String,
           path: result['path'] as String,
           width: result['width'] as int,
           height: result['height'] as int,
