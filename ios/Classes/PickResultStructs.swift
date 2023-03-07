@@ -47,6 +47,7 @@ struct VideoPickResult:CustomStringConvertible {
     var videoPath: String
     var duration: Double
     var thumbnailPath: String
+    var thumbnailFilename: String
     var thumbnailWidth: Int
     var thumbnailHeight: Int
 
@@ -55,6 +56,7 @@ struct VideoPickResult:CustomStringConvertible {
         map["videoPath"] = videoPath
         map["duration"] = duration
         map["thumbnailPath"] = thumbnailPath
+        map["thumbnailFilename"] = thumbnailFilename
         map["thumbnailWidth"] = thumbnailWidth
         map["thumbnailHeight"] = thumbnailHeight
         return map

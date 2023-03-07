@@ -53,13 +53,8 @@ class KangImagePicker {
     if (result is List) {
       for (var resultItem in result) {
         if (resultItem != null && resultItem is Map) {
-          VideoPickResult videoSelectedResult = VideoPickResult(
-            videoPath: resultItem['videoPath'] as String,
-            thumbnailPath: resultItem['thumbnailPath'] as String,
-            thumbnailWidth: resultItem['thumbnailWidth'] as int,
-            thumbnailHeight: resultItem['thumbnailHeight'] as int,
-            duration: resultItem['duration'] as double,
-          );
+          VideoPickResult videoSelectedResult =
+              VideoPickResult.fromJson(resultItem);
           videoSelectedList.add(videoSelectedResult);
         }
       }

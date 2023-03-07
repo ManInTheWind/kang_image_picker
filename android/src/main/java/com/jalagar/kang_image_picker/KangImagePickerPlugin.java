@@ -254,11 +254,12 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                         for (LocalMedia mediaItem : pickResult) {
                             getThumbnailAsync(getContext(), mediaItem.getPath(), new ThumbnailCallback() {
                                 @Override
-                                public void onThumbnailReady(String thumbnailPath, int width, int height) {
+                                public void onThumbnailReady(String thumbnailPath, String filename, int width, int height) {
                                     Log.e(TAG, "加载缩略图完成，线程：" + Thread.currentThread().getName());
                                     VideoPickResult videoPickResult = new VideoPickResult();
                                     videoPickResult.setVideoPath(mediaItem.getRealPath());
                                     videoPickResult.setThumbnailPath(thumbnailPath);
+                                    videoPickResult.setThumbnailFilename(filename);
                                     videoPickResult.setThumbnailWidth(width);
                                     videoPickResult.setThumbnailHeight(height);
                                     videoPickResult.setDuration(((double) mediaItem.getDuration()));
@@ -539,8 +540,9 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                         FileOutputStream fos = null;
                         String result = null;
                         String targetPath = getVideoThumbnailDir();
+                        String filename = "thumbnails_" + System.currentTimeMillis() + ".jpg";
                         try {
-                            File targetFile = new File(targetPath, "thumbnails_" + System.currentTimeMillis() + ".jpg");
+                            File targetFile = new File(targetPath, filename);
                             fos = new FileOutputStream(targetFile);
                             fos.write(stream.toByteArray());
                             fos.flush();
@@ -552,7 +554,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                             PictureFileUtils.close(stream);
                         }
                         // 处理缩略图
-                        callback.onThumbnailReady(result, resource.getWidth(), resource.getHeight());
+                        callback.onThumbnailReady(result, filename, resource.getWidth(), resource.getHeight());
                     }
 
                     @Override
@@ -568,7 +570,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
     }
 
     private interface ThumbnailCallback {
-        void onThumbnailReady(String thumbnailPath, int width, int height);
+        void onThumbnailReady(String thumbnailPath, String filename, int width, int height);
 
         void onThumbnailFailed();
     }

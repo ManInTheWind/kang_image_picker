@@ -163,7 +163,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 //                                            resultFilePathList.append(url.path)
                                             photoPath = url.path
                                         }
-                                        
+
                                         let pickResult = PhotoPickResult(
                                             id: photo.asset!.localIdentifier,
                                             path: photoPath,
@@ -378,8 +378,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                 videoPath: videoPath,
                                 duration: duration,
                                 thumbnailPath: result.0,
-                                thumbnailWidth: result.1,
-                                thumbnailHeight: result.2
+                                thumbnailFilename: result.1,
+                                thumbnailWidth: result.2,
+                                thumbnailHeight: result.3
                             )
                             resultFilePathList.append(videoResult.toMap())
                             dispatchGroup.leave()
@@ -437,10 +438,12 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         return resultAsset
     }
 
-    func saveImage(_ image: UIImage) -> (String, Int, Int)? {
+    // MARK: - 返回路径，文件名称，宽度，高度
+
+    func saveImage(_ image: UIImage) -> (String, String, Int, Int)? {
         let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
         let randomNum = Int(arc4random_uniform(UInt32.max))
-        let filename = "thumbnail_\(timestamp)_\(randomNum)"
+        let filename = "thumbnail_\(timestamp)_\(randomNum).jpg"
         let fileManaget = FileManager.default
         // 获取缓存目录路径
         let cacheDirectoryUrl = fileManaget.urls(for: .cachesDirectory, in: .userDomainMask).first!
@@ -454,7 +457,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         }
 
         // 拼接文件路径
-        let filePath: URL = cacheImageUrl.appendingPathComponent("\(filename).jpg")
+        let filePath: URL = cacheImageUrl.appendingPathComponent(filename)
 
 //        print("filePath:\(filePath)")
 
@@ -471,7 +474,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         let height: CGFloat = image.size.height
 
         // 返回路径、宽度和高度信息
-        return (filePath.path, Int(round(width)), Int(round(height)))
+        return (filePath.path, filename, Int(round(width)), Int(round(height)))
     }
 
     func getCurrentViewController(base: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {
