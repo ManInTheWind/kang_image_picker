@@ -137,7 +137,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
             if cancelled {
                 print("Picker was canceled")
-                result(self.getFlutterCancelError())
+                result(nil)
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }
@@ -340,7 +340,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         picker.didFinishPicking { [weak picker] items, cancelled in
             if cancelled {
                 print("Picker was canceled")
-                result(self.getFlutterCancelError())
+                result(nil)
                 picker?.dismiss(animated: true, completion: nil)
                 return
             }

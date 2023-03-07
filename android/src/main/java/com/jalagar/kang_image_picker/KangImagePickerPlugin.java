@@ -211,7 +211,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                     public void onCancel() {
                         // 处理取消操作
                         Pair<String, String> flutterCancelError = getFlutterCancelError();
-                        result.error(flutterCancelError.first, flutterCancelError.second, null);
+                        result.success(null);
                     }
                 });
     }
@@ -305,7 +305,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                     public void onCancel() {
                         // 处理取消操作
                         Pair<String, String> flutterCancelError = getFlutterCancelError();
-                        result.error(flutterCancelError.first, flutterCancelError.second, null);
+                        result.success(null);
                     }
                 });
     }
