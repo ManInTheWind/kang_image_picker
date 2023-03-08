@@ -386,7 +386,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                     case .photo(p: _):
                         dispatchGroup.leave()
                     case .video(v: let video):
+                        print("video.asset:\(String(describing: video.asset))")
                         if let result = self.saveImage(video.thumbnail) {
+                            print("🔫 保存视频缩略图成功：\(result)")
                             let assetURL = video.url
                             var videoResult: VideoPickResult
                             var duration: Double
@@ -490,11 +492,11 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         // 拼接文件路径
         let filePath: URL = cacheImageUrl.appendingPathComponent(filename)
 
-//        print("filePath:\(filePath)")
+        
 
         // 保存图片
         do {
-            try image.jpegData(compressionQuality: 0.8)?.write(to: filePath)
+            try image.jpegData(compressionQuality: 0.8)?.write(to: filePath,options: .atomic)
         } catch {
             print("保存图片失败: \(error.localizedDescription)")
             return nil
