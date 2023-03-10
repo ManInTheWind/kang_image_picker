@@ -78,7 +78,7 @@ public class VideoPickResult {
                 put("thumbnailFilename", thumbnailFilename);
                 put("thumbnailPath", thumbnailPath);
                 put("thumbnailWidth", thumbnailWidth);
-                put("thumbnailHeight", videoPath);
+                put("thumbnailHeight", thumbnailHeight);
                 put("duration", duration);
             }
         };

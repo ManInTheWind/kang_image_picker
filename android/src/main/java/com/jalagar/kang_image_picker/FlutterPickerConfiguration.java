@@ -26,19 +26,20 @@ public class FlutterPickerConfiguration {
     private String tintColor;
 
     ///选择数量
-    private Integer maxNumberOfItems;
+    private Integer maxNumberOfItems =1;
 
     ///定义记录视频的时间限制。默认为30秒,可Null
-    private Integer videoRecordingTimeLimit;
+    private Integer videoRecordingTimeLimit = 30;
 
     ///视频长度。默认60秒,可Null
-    private Integer trimmerMaxDuration;
+    private Integer trimmerMaxDuration = 30;
 
     public static FlutterPickerConfiguration fromObject(Object obj) throws JSONException {
         if (!(obj instanceof Map)) {
             return defaultConfiguration();
         }
-        JSONObject jsonObject = new JSONObject(obj.toString());
+        System.out.println("fromObject:" + obj);
+        JSONObject jsonObject = new JSONObject((Map<?, ?>) obj);
         Map<String, Object> map = new HashMap<>();
         Iterator<String> iterator = jsonObject.keys();
         while (iterator.hasNext()) {
@@ -46,6 +47,7 @@ public class FlutterPickerConfiguration {
             Object value = jsonObject.get(key);
             map.put(key, value);
         }
+        System.out.println("jsonObject:" + jsonObject);
         FlutterPickerConfiguration configuration = new FlutterPickerConfiguration();
         Integer mediaType = ((Integer) map.get("mediaType"));
         if (mediaType != null) {
@@ -66,8 +68,12 @@ public class FlutterPickerConfiguration {
         configuration.setCropRatio(((Double) map.get("cropRatio")));
         configuration.setTintColor(((String) map.get("tintColor")));
         configuration.setMaxNumberOfItems(((Integer) map.get("maxNumberOfItems")));
-        configuration.setVideoRecordingTimeLimit(((Integer) map.get("videoRecordingTimeLimit")));
-        configuration.setTrimmerMaxDuration(((Integer) map.get("trimmerMaxDuration")));
+        if (map.get("videoRecordingTimeLimit") != null) {
+            configuration.setVideoRecordingTimeLimit(((Integer) map.get("videoRecordingTimeLimit")));
+        }
+        if (map.get("trimmerMaxDuration") != null) {
+            configuration.setTrimmerMaxDuration(((Integer) map.get("trimmerMaxDuration")));
+        }
         return configuration;
     }
 

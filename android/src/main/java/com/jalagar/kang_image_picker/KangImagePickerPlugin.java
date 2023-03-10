@@ -223,8 +223,9 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             try {
                 flutterPickerConfiguration = FlutterPickerConfiguration.fromObject(arguments);
             } catch (JSONException e) {
+                e.printStackTrace();
                 Pair<String, String> flutterDefaultError = getFlutterDefaultError("参数不正确");
-                result.error(flutterDefaultError.first, flutterDefaultError.second, e.getStackTrace());
+                result.error(flutterDefaultError.first, flutterDefaultError.second, null);
                 return;
             }
         } else {

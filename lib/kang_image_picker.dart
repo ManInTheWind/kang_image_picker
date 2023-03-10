@@ -42,6 +42,7 @@ class KangImagePicker {
   static Future<List<VideoPickResult>?> selectVideos({
     PickerConfiguration configuration = const PickerConfiguration(),
   }) async {
+    print('selectVideos:${configuration.toJson()}');
     final result = await _methodChannel.invokeMethod<Object?>(
       'selectVideos',
       configuration.toJson(),
