@@ -1,3 +1,5 @@
+part of kang_image_picker;
+
 enum PickerMediaType { photo, video, photoAndVideo }
 
 enum PickerScreenEnum {
@@ -48,7 +50,7 @@ class PickerConfiguration {
       PickerScreenEnum.photo
     ],
     this.cropRatio,
-    this.tintColor,
+    this.tintColor = "#2BD180",
     this.maxNumberOfItems = 1,
     this.videoRecordingTimeLimit,
     this.trimmerMaxDuration,

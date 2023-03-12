@@ -1,8 +1,11 @@
-import 'package:flutter/services.dart';
-import 'package:kang_image_picker/model/picker_configuration.dart';
-import 'package:kang_image_picker/model/video_pick_result.dart';
+library kang_image_picker;
 
-import 'model/photo_pick_result.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+
+part 'model/photo_pick_result.dart';
+part 'model/picker_configuration.dart';
+part 'model/video_pick_result.dart';
 
 class KangImagePicker {
   static const _methodChannel = MethodChannel('kang_image_picker');

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+part of kang_image_picker;
 
 @immutable
 class VideoPickResult {
