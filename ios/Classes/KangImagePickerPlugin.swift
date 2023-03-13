@@ -220,7 +220,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                     path: photoPath,
                                     width: width,
                                     height: height,
-                                    filename: photo.asset?.originalFilename
+                                    filename: photo.asset!.originalFilename
                                 )
 
                                 print("📷 pickResult:\(String(describing: pickResult))")

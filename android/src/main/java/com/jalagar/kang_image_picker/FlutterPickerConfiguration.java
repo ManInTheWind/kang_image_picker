@@ -38,7 +38,6 @@ public class FlutterPickerConfiguration {
         if (!(obj instanceof Map)) {
             return defaultConfiguration();
         }
-        System.out.println("fromObject:" + obj);
         JSONObject jsonObject = new JSONObject((Map<?, ?>) obj);
         Map<String, Object> map = new HashMap<>();
         Iterator<String> iterator = jsonObject.keys();
@@ -47,7 +46,6 @@ public class FlutterPickerConfiguration {
             Object value = jsonObject.get(key);
             map.put(key, value);
         }
-        System.out.println("jsonObject:" + jsonObject);
         FlutterPickerConfiguration configuration = new FlutterPickerConfiguration();
         Integer mediaType = ((Integer) map.get("mediaType"));
         if (mediaType != null) {

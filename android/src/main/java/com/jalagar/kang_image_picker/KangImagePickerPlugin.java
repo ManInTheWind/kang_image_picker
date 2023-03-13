@@ -1,5 +1,7 @@
 package com.jalagar.kang_image_picker;
 
+import static com.jalagar.kang_image_picker.CropRatio.fromValue;
+
 import android.Manifest;
 import android.app.Dialog;
 
@@ -180,38 +182,54 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             selectorStyle = getSelectorStyle(flutterPickerConfiguration.getTintColor());
         }
 
-        PictureSelector.create(mActivity)
+        Log.i(TAG, "flutterPickerConfiguration:" + flutterPickerConfiguration);
+
+
+        PictureSelectionModel selector = PictureSelector.create(mActivity)
                 .openGallery(flutterPickerConfiguration.getMediaType())
                 .setImageEngine(GlideEngine.createGlideEngine())
                 .setSelectorUIStyle(selectorStyle)
                 .setCameraInterceptListener(new MeOnCameraInterceptListener())
-                .setMaxSelectNum(flutterPickerConfiguration.getMaxNumberOfItems())
-                .forResult(new OnResultCallbackListener<LocalMedia>() {
-                    @Override
-                    public void onResult(ArrayList<LocalMedia> pickResult) {
-                        analyticalSelectResults(pickResult);
-                        List<Map<String, Object>> paths = new ArrayList<>();
-                        for (LocalMedia localMedia : pickResult) {
-                            // 处理返回结果
-                            PhotoPickResult photoPickResult = new PhotoPickResult();
-                            photoPickResult.setId(Long.toString(localMedia.getId()));
-                            photoPickResult.setPath(localMedia.getRealPath());
-                            photoPickResult.setWidth(localMedia.getWidth());
-                            photoPickResult.setHeight(localMedia.getHeight());
-                            photoPickResult.setFilename(localMedia.getFileName());
-                            photoPickResult.setMimeType(localMedia.getMimeType());
-                            paths.add(photoPickResult.toMap());
-                        }
-                        result.success(paths);
-                    }
+                .setMaxSelectNum(flutterPickerConfiguration.getMaxNumberOfItems());
 
-                    @Override
-                    public void onCancel() {
-                        // 处理取消操作
-                        Pair<String, String> flutterCancelError = getFlutterCancelError();
-                        result.success(null);
+        //添加裁剪
+        if (flutterPickerConfiguration.getCropRatio() != null) {
+            CropRatio cropRatio = fromValue(flutterPickerConfiguration.getCropRatio());
+            Log.i(TAG, "cropRatio:" + cropRatio);
+            selector.setCropEngine(new ImageFileCropEngine(cropRatio));
+        }
+        selector.forResult(new OnResultCallbackListener<LocalMedia>() {
+            @Override
+            public void onResult(ArrayList<LocalMedia> pickResult) {
+                analyticalSelectResults(pickResult);
+                List<Map<String, Object>> paths = new ArrayList<>();
+                for (LocalMedia localMedia : pickResult) {
+                    // 处理返回结果
+                    PhotoPickResult photoPickResult = new PhotoPickResult();
+                    photoPickResult.setId(Long.toString(localMedia.getId()));
+                    if (localMedia.isCut()) {
+                        photoPickResult.setPath(localMedia.getCutPath());
+                        photoPickResult.setWidth(localMedia.getCropImageWidth());
+                        photoPickResult.setHeight(localMedia.getCropImageHeight());
+                    } else {
+                        photoPickResult.setPath(localMedia.getRealPath());
+                        photoPickResult.setWidth(localMedia.getWidth());
+                        photoPickResult.setHeight(localMedia.getHeight());
                     }
-                });
+                    photoPickResult.setFilename(localMedia.getFileName());
+                    photoPickResult.setMimeType(localMedia.getMimeType());
+                    paths.add(photoPickResult.toMap());
+                }
+                result.success(paths);
+            }
+
+            @Override
+            public void onCancel() {
+                // 处理取消操作
+                Pair<String, String> flutterCancelError = getFlutterCancelError();
+                result.success(null);
+            }
+        });
     }
 
     /**
@@ -235,7 +253,6 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             selectorStyle = getSelectorStyle(flutterPickerConfiguration.getTintColor());
         }
         Log.i(TAG, "flutterPickerConfiguration:" + flutterPickerConfiguration);
-        int totalResultCount = 0;
         PictureSelector.create(mActivity)
                 .openGallery(SelectMimeType.ofVideo())
                 .setImageEngine(GlideEngine.createGlideEngine())
@@ -367,8 +384,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             options.setShowCropGrid(true);
             options.setCircleDimmedLayer(false);
             options.withAspectRatio(cropRatio.getX(), cropRatio.getY());
-
-//        options.setCropOutputPathDir(getSandboxPath());
+            options.setActiveControlsWidgetColor(0xFFFF4081); //Color.PINK 粉色
             options.isCropDragSmoothToCenter(false);
             options.setSkipCropMimeType(PictureMimeType.ofGIF(), PictureMimeType.ofWEBP());
             options.isForbidCropGifWebp(true);

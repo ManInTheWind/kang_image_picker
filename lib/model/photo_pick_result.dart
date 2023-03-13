@@ -9,7 +9,7 @@ class PhotoPickResult {
   final String path;
   final int width;
   final int height;
-  final String? filename;
+  final String filename;
   final String? mimeType;
 
   const PhotoPickResult({
@@ -17,7 +17,7 @@ class PhotoPickResult {
     required this.path,
     required this.width,
     required this.height,
-    this.filename,
+    required this.filename,
     this.mimeType,
   });
 

@@ -33,7 +33,7 @@ class KangImagePicker {
           path: result['path'] as String,
           width: result['width'] as int,
           height: result['height'] as int,
-          filename: result['filename'] as String?,
+          filename: result['filename'] as String,
           mimeType: result['mimeType'] as String?,
         );
         photoPickResultList.add(photoPickResult);
