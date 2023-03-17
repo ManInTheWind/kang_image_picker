@@ -7,6 +7,8 @@ import android.app.Dialog;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -629,7 +631,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
 
         @Override
         public void onPermissionDescription(Context context, ViewGroup viewGroup, String permission) {
-            addPermissionDescription(true, viewGroup, new String[]{permission});
+            addPermissionDescription(context, true, viewGroup, new String[]{permission});
         }
 
         @Override
@@ -644,7 +646,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
      * @param viewGroup
      * @param permissionArray
      */
-    private static void addPermissionDescription(boolean isHasSimpleXCamera, ViewGroup viewGroup, String[] permissionArray) {
+    private static void addPermissionDescription(Context context, boolean isHasSimpleXCamera, ViewGroup viewGroup, String[] permissionArray) {
         int dp10 = DensityUtil.dip2px(viewGroup.getContext(), 10);
         int dp15 = DensityUtil.dip2px(viewGroup.getContext(), 15);
         MediumBoldTextView view = new MediumBoldTextView(viewGroup.getContext());
@@ -655,21 +657,27 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
 
         String title;
         String explain;
-
+        String appName = getAppName(context);
+        //&quot;Toersen&quot;想要使用您的麦克风录制视频以用作发布推文视频
+        String explainPrefix = "'" + appName + "'" + "想要使用您的";
         if (TextUtils.equals(permissionArray[0], PermissionConfig.CAMERA[0])) {
             title = "相机权限使用说明";
-            explain = "相机权限使用说明\n用户app用于拍照/录视频";
+            ///相机权限使用说明\n用户app用于拍照/录视频"
+            explain = explainPrefix + "相机以用于拍照/录视频来发布推文";
         } else if (TextUtils.equals(permissionArray[0], Manifest.permission.RECORD_AUDIO)) {
             if (isHasSimpleXCamera) {
                 title = "麦克风权限使用说明";
-                explain = "麦克风权限使用说明\n用户app用于录视频时采集声音";
+                explain = explainPrefix + "麦克风以用于录视频时采集声音来发布推文";
+//                explain = "麦克风权限使用说明\n用户app用于录视频时采集声音";
             } else {
                 title = "录音权限使用说明";
-                explain = "录音权限使用说明\n用户app用于采集声音";
+                explain = explainPrefix + "麦克风以用于录视频时采集声音来发布推文";
+//                explain = "录音权限使用说明\n用户app用于采集声音";
             }
         } else {
             title = "存储权限使用说明";
-            explain = "存储权限使用说明\n用户app写入/下载/保存/读取/修改/删除图片、视频、文件等信息";
+            explain = explainPrefix + "存储权限以用于写入/下载/保存/读取/修改/删除图片、视频、文件等信息";
+//            explain = "存储权限使用说明\n用户app写入/下载/保存/读取/修改/删除图片、视频、文件等信息";
         }
         int startIndex = 0;
         int endOf = startIndex + title.length();
@@ -760,6 +768,13 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
             Log.i(TAG, "文件大小: " + PictureFileUtils.formatAccurateUnitFileSize(media.getSize()));
             Log.i(TAG, "文件时长: " + media.getDuration());
         }
+    }
+
+
+    public static String getAppName(Context context) {
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
+        int stringId = applicationInfo.labelRes;
+        return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : context.getString(stringId);
     }
 
 
