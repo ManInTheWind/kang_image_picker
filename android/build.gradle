@@ -39,8 +39,8 @@ allprojects {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-android-extensions'
+//apply plugin: 'kotlin-kapt'
+//apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 33
@@ -72,24 +72,16 @@ dependencies {
     compileOnly files("$flutterRoot/bin/cache/artifacts/engine/android-arm/flutter.jar")
     api 'androidx.appcompat:appcompat:1.5.1'
     // PictureSelector 基础 (必须)
-    implementation 'io.github.lucksiege:pictureselector:v3.10.7'
+    implementation 'io.github.lucksiege:pictureselector:v3.10.8'
 
     // 图片压缩 (按需引入)
-    implementation 'io.github.lucksiege:compress:v3.10.7'
+    implementation 'io.github.lucksiege:compress:v3.10.8'
 
     // 图片裁剪 (按需引入)
-    implementation 'io.github.lucksiege:ucrop:v3.10.7'
+    implementation 'io.github.lucksiege:ucrop:v3.10.8'
 
     // 自定义相机 (按需引入)
-    implementation 'io.github.lucksiege:camerax:v3.10.7'
+    implementation 'io.github.lucksiege:camerax:v3.10.8'
 
     implementation "com.github.bumptech.glide:glide:4.13.2"
-
-//    // ijkplayer
-//    implementation 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8',{
-//        exclude group: 'com.befovy.fijkplayer',module: 'fijkplayer'
-//    }
-//    implementation 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.8'
-//    implementation 'tv.danmaku.ijk.media:ijkplayer-arm64:0.8.8'
-
 }

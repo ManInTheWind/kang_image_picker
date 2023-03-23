@@ -189,6 +189,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
 
         PictureSelectionModel selector = PictureSelector.create(mActivity)
                 .openGallery(flutterPickerConfiguration.getMediaType())
+                .setImageSpanCount(3)
                 .setImageEngine(GlideEngine.createGlideEngine())
                 .setSelectorUIStyle(selectorStyle)
                 .setCameraInterceptListener(new MeOnCameraInterceptListener())
@@ -258,6 +259,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
         PictureSelector.create(mActivity)
                 .openGallery(SelectMimeType.ofVideo())
                 .setImageEngine(GlideEngine.createGlideEngine())
+                .setImageSpanCount(3)
                 .setSelectorUIStyle(selectorStyle)
                 .setCameraInterceptListener(new MeOnCameraInterceptListener())
                 .setMaxSelectNum(flutterPickerConfiguration.getMaxNumberOfItems())
