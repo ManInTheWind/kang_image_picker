@@ -66,7 +66,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         /* Defines the name of the album when saving pictures in the user's photo library.
          In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName" */
         /* 定义保存图片到用户的照片库中的相册名称。通常是您的应用程序名称。默认为“DefaultYPImagePickerAlbumName” */
-        let bundleName =  Bundle.main.infoDictionary!["CFBundleName"] as! String;
+        let bundleName = Bundle.main.infoDictionary!["CFBundleName"] as! String
         config.albumName = bundleName
 
         /* 定义启动时显示哪个屏幕。只有在`showsVideo = true`时才会使用视频模式。默认值为`.photo` */
@@ -166,6 +166,21 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                 switch item {
                 case .photo(p: let photo):
                     if photo.fromCamera, photo.asset == nil {
+                        let activityIndicator = UIActivityIndicatorView()
+                        activityIndicator.center = CGPoint(x: UIScreen.main.bounds.midX,
+                                                           y: UIScreen.main.bounds.midY)
+                       
+                        if #available(iOS 13.0, *) {
+                            activityIndicator.color = .gray
+                            activityIndicator.style = UIActivityIndicatorView.Style.large
+                        } else {
+                            activityIndicator.style = UIActivityIndicatorView.Style.whiteLarge
+                        }
+
+                        picker?.view.addSubview(activityIndicator)
+
+                        activityIndicator.startAnimating()
+
                         queue.asyncAfter(deadline: .now() + 0.8) {
                             if let photoInAlbum = self.getPHAsset(inAlbumNamed: bundleName) {
                                 photoInAlbum.getURL { responseURL in
@@ -176,19 +191,32 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                         } else {
                                             photoPath = url.path
                                         }
+                                        var photoFilename: String
+
+                                        if let filename = photo.asset?.originalFilename {
+                                            photoFilename = filename
+
+                                        } else {
+                                            photoFilename = url.lastPathComponent
+                                        }
 
                                         let pickResult = PhotoPickResult(
-                                            id: photo.asset!.localIdentifier,
+                                            id: photo.asset?.localIdentifier ?? UUID().uuidString,
                                             path: photoPath,
-                                            width: Int(photo.image.size.width),
-                                            height: Int(photo.image.size.height),
-                                            filename: photo.asset?.originalFilename
+                                            width: photo.asset?.pixelWidth ?? Int(photo.image.size.width),
+                                            height: photo.asset?.pixelHeight ?? Int(photo.image.size.height),
+                                            filename: photoFilename
                                         )
                                         pickResultList.append(pickResult.toMap())
                                     }
+                                    activityIndicator.stopAnimating()
+                                    activityIndicator.removeFromSuperview()
                                     dispatchGroup.leave()
                                 }
+
                             } else {
+                                activityIndicator.stopAnimating()
+                                activityIndicator.removeFromSuperview()
                                 dispatchGroup.leave()
                             }
                         }
@@ -335,7 +363,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
 
         /* 颜色 */
         if let tintColor = flutterPickConfiguration.tintColor {
-            config.colors.tintColor = tintColor.uicolor()
+            let color = tintColor.uicolor()
+            config.colors.tintColor = color
         }
 
         /* Defines if the status bar should be hidden when showing the picker. Default is true */
@@ -386,6 +415,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                     case .photo(p: _):
                         dispatchGroup.leave()
                     case .video(v: let video):
+                        print("video:\(String(describing: video))")
+                        print("video.url:\(String(describing: video.url))")
                         print("video.asset:\(String(describing: video.asset))")
                         if let result = self.saveImage(video.thumbnail) {
                             print("🔫 保存视频缩略图成功：\(result)")
@@ -403,9 +434,17 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                             } else {
                                 videoPath = assetURL.path
                             }
+                            var videoFilename: String
+
+                            if let filename = video.asset?.originalFilename {
+                                videoFilename = filename
+                            } else {
+                                videoFilename = video.url.lastPathComponent
+                            }
+
                             videoResult = VideoPickResult(
                                 videoPath: videoPath,
-                                videoFilename: video.asset!.originalFilename!,
+                                videoFilename: videoFilename,
                                 duration: duration,
                                 thumbnailPath: result.0,
                                 thumbnailFilename: result.1,
@@ -492,11 +531,9 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
         // 拼接文件路径
         let filePath: URL = cacheImageUrl.appendingPathComponent(filename)
 
-        
-
         // 保存图片
         do {
-            try image.jpegData(compressionQuality: 0.8)?.write(to: filePath,options: .atomic)
+            try image.jpegData(compressionQuality: 0.8)?.write(to: filePath, options: .atomic)
         } catch {
             print("保存图片失败: \(error.localizedDescription)")
             return nil
@@ -550,10 +587,10 @@ extension PHAsset {
             requestContentEditingInput(with: options, completionHandler: { (contentEditingInput: PHContentEditingInput?, _: [AnyHashable: Any]) in
                 if let contentEditingInput = contentEditingInput {
                     completionHandler(contentEditingInput.fullSizeImageURL as URL?)
-                }else{
+                } else {
                     completionHandler(nil)
                 }
-               
+
             })
         } else if mediaType == .video {
             let options: PHVideoRequestOptions = .init()
