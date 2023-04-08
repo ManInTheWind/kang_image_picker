@@ -223,6 +223,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                     } else if photo.asset == nil {
                         dispatchGroup.leave()
                     } else {
+                        
                         photo.asset!.getURL(completionHandler: { (responseURL: URL?) in
                             if let url = responseURL {
                                 var photoPath: String
@@ -240,15 +241,20 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                     width = Int(photo.image.size.width)
                                     height = Int(photo.image.size.height)
                                 }
-//                                print("image:\(photo.image.size)")
-//                                print("originalImage:\(photo.originalImage.size)")
-//                                print("pickResult image size :\(width)*\(height)")
+                               var photoFilename: String
+                                
+                                if let filename = photo.asset?.originalFilename {
+                                    photoFilename = filename
+
+                                } else {
+                                    photoFilename = url.lastPathComponent
+                                }
                                 let pickResult = PhotoPickResult(
                                     id: photo.asset!.localIdentifier,
                                     path: photoPath,
                                     width: width,
                                     height: height,
-                                    filename: photo.asset!.originalFilename
+                                    filename: photoFilename
                                 )
 
                                 print("📷 pickResult:\(String(describing: pickResult))")
