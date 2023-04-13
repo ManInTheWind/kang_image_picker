@@ -51,11 +51,13 @@ import com.luck.picture.lib.basic.PictureSelector;
 import com.luck.picture.lib.config.PictureMimeType;
 import com.luck.picture.lib.config.SelectMimeType;
 import com.luck.picture.lib.dialog.RemindDialog;
+import com.luck.picture.lib.engine.CompressFileEngine;
 import com.luck.picture.lib.engine.CropFileEngine;
 import com.luck.picture.lib.entity.LocalMedia;
 import com.luck.picture.lib.entity.MediaExtraInfo;
 import com.luck.picture.lib.interfaces.OnCameraInterceptListener;
 import com.luck.picture.lib.interfaces.OnCustomLoadingListener;
+import com.luck.picture.lib.interfaces.OnKeyValueResultCallbackListener;
 import com.luck.picture.lib.interfaces.OnResultCallbackListener;
 import com.luck.picture.lib.permissions.PermissionConfig;
 import com.luck.picture.lib.style.BottomNavBarStyle;
@@ -63,6 +65,7 @@ import com.luck.picture.lib.style.PictureSelectorStyle;
 import com.luck.picture.lib.style.PictureWindowAnimationStyle;
 import com.luck.picture.lib.style.SelectMainStyle;
 import com.luck.picture.lib.style.TitleBarStyle;
+import com.luck.picture.lib.utils.DateUtils;
 import com.luck.picture.lib.utils.DensityUtil;
 import com.luck.picture.lib.utils.MediaUtils;
 import com.luck.picture.lib.utils.PictureFileUtils;
@@ -98,6 +101,10 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import top.zibin.luban.CompressionPredicate;
+import top.zibin.luban.Luban;
+import top.zibin.luban.OnNewCompressListener;
+import top.zibin.luban.OnRenameListener;
 
 
 /**
@@ -221,6 +228,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                     }
                     photoPickResult.setFilename(localMedia.getFileName());
                     photoPickResult.setMimeType(localMedia.getMimeType());
+                    photoPickResult.setSize(localMedia.getSize());
                     paths.add(photoPickResult.toMap());
                 }
                 result.success(paths);
@@ -285,6 +293,7 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
                                     videoPickResult.setThumbnailFilename(filename);
                                     videoPickResult.setThumbnailWidth(width);
                                     videoPickResult.setThumbnailHeight(height);
+                                    videoPickResult.setSize(mediaItem.getSize());
                                     videoPickResult.setDuration(((double) mediaItem.getDuration()));
                                     synchronized (videoSelectResultList) {
                                         videoSelectResultList.add(videoPickResult.toMap());
@@ -491,8 +500,6 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
      * 自定义拍照
      */
     private class MeOnCameraInterceptListener implements OnCameraInterceptListener {
-
-
         @Override
         public void openCamera(Fragment fragment, int cameraMode, int requestCode) {
             SimpleCameraX camera = SimpleCameraX.of();
@@ -799,6 +806,60 @@ public class KangImagePickerPlugin implements FlutterPlugin, MethodCallHandler, 
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.R)
     private boolean isAtLeast11() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
+    }
+
+    /**
+     * 压缩引擎
+     *
+     * @return
+     */
+    private ImageFileCompressEngine getCompressFileEngine() {
+        return new ImageFileCompressEngine();
+    }
+
+    /**
+     * 自定义压缩
+     */
+    private static class ImageFileCompressEngine implements CompressFileEngine {
+
+        @Override
+        public void onStartCompress(Context context, ArrayList<Uri> source, OnKeyValueResultCallbackListener call) {
+            Luban.with(context).load(source).ignoreBy(100).setRenameListener(new OnRenameListener() {
+                @Override
+                public String rename(String filePath) {
+                    int indexOf = filePath.lastIndexOf(".");
+                    String postfix = indexOf != -1 ? filePath.substring(indexOf) : ".jpg";
+                    return DateUtils.getCreateFileName("CMP_") + postfix;
+                }
+            }).filter(new CompressionPredicate() {
+                @Override
+                public boolean apply(String path) {
+                    if (PictureMimeType.isUrlHasImage(path) && !PictureMimeType.isHasHttp(path)) {
+                        return true;
+                    }
+                    return !PictureMimeType.isUrlHasGif(path);
+                }
+            }).setCompressListener(new OnNewCompressListener() {
+                @Override
+                public void onStart() {
+
+                }
+
+                @Override
+                public void onSuccess(String source, File compressFile) {
+                    if (call != null) {
+                        call.onCallback(source, compressFile.getAbsolutePath());
+                    }
+                }
+
+                @Override
+                public void onError(String source, Throwable e) {
+                    if (call != null) {
+                        call.onCallback(source, null);
+                    }
+                }
+            }).launch();
+        }
     }
 
 

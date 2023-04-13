@@ -35,6 +35,7 @@ class KangImagePicker {
           height: result['height'] as int,
           filename: result['filename'] as String,
           mimeType: result['mimeType'] as String?,
+          size: result['size'] as int,
         );
         photoPickResultList.add(photoPickResult);
       }

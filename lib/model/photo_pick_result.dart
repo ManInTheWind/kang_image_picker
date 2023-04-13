@@ -11,6 +11,7 @@ class PhotoPickResult {
   final int height;
   final String filename;
   final String? mimeType;
+  final int size;
 
   const PhotoPickResult({
     required this.id,
@@ -19,10 +20,11 @@ class PhotoPickResult {
     required this.height,
     required this.filename,
     this.mimeType,
+    required this.size,
   });
 
   @override
   String toString() {
-    return 'PhotoPickResult{id: $id,path: $path, width: $width, height: $height, filename: $filename, mimeType: $mimeType}';
+    return 'PhotoPickResult{id: $id, path: $path, width: $width, height: $height, filename: $filename, mimeType: $mimeType, size: $size}';
   }
 }

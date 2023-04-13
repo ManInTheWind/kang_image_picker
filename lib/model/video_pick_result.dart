@@ -9,6 +9,7 @@ class VideoPickResult {
   final int thumbnailWidth;
   final int thumbnailHeight;
   final double duration;
+  final int size;
 
   // const VideoPickResult({
   //   required this.videoPath,
@@ -25,7 +26,8 @@ class VideoPickResult {
         thumbnailFilename = json['thumbnailFilename'] as String,
         thumbnailWidth = json['thumbnailWidth'] as int,
         thumbnailHeight = json['thumbnailHeight'] as int,
-        duration = json['duration'] as double;
+        duration = json['duration'] as double,
+        size = json['size'] as int;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'videoPath': videoPath,

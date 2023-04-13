@@ -14,6 +14,7 @@ struct PhotoPickResult: CustomStringConvertible {
     var height: Int
     var filename: String?
     var mimeType: String?
+    var size: Int
 
     func toMap() -> [String: Any?] {
         var map = [String: Any?]()
@@ -23,6 +24,7 @@ struct PhotoPickResult: CustomStringConvertible {
         map["height"] = height
         map["filename"] = filename
         map["mimeType"] = mimeType
+        map["size"] = size
         return map
     }
 
@@ -35,6 +37,7 @@ struct PhotoPickResult: CustomStringConvertible {
             height:\(height)
             filename:\(String(describing: filename))
             mimeType:\(String(describing: mimeType))
+            size:\(String(describing: size))
         }
         """
     }
@@ -48,6 +51,7 @@ struct VideoPickResult: CustomStringConvertible {
     var thumbnailFilename: String
     var thumbnailWidth: Int
     var thumbnailHeight: Int
+    var size: Int
 
     func toMap() -> [String: Any?] {
         var map = [String: Any?]()
@@ -58,6 +62,7 @@ struct VideoPickResult: CustomStringConvertible {
         map["thumbnailFilename"] = thumbnailFilename
         map["thumbnailWidth"] = thumbnailWidth
         map["thumbnailHeight"] = thumbnailHeight
+        map["size"] = size
         return map
     }
 
@@ -70,6 +75,7 @@ struct VideoPickResult: CustomStringConvertible {
             thumbnailPath:\(String(describing: thumbnailPath))
             thumbnailWidth:\(String(describing: thumbnailWidth))
             thumbnailHeight:\(String(describing: thumbnailHeight))
+            size:\(String(describing: size))
         }
         """
     }

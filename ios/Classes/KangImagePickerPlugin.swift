@@ -169,7 +169,7 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                         let activityIndicator = UIActivityIndicatorView()
                         activityIndicator.center = CGPoint(x: UIScreen.main.bounds.midX,
                                                            y: UIScreen.main.bounds.midY)
-                       
+
                         if #available(iOS 13.0, *) {
                             activityIndicator.color = .gray
                             activityIndicator.style = UIActivityIndicatorView.Style.large
@@ -199,13 +199,20 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                         } else {
                                             photoFilename = url.lastPathComponent
                                         }
+                                        // 使用 PHAssetResource 来获取文件大小
+                                        let resources = PHAssetResource.assetResources(for: photoInAlbum)
+                                        var size = 0
+                                        if let resource = resources.first {
+                                            size = resource.value(forKey: "fileSize") as? Int ?? 0
+                                        }
 
                                         let pickResult = PhotoPickResult(
                                             id: photo.asset?.localIdentifier ?? UUID().uuidString,
                                             path: photoPath,
                                             width: photo.asset?.pixelWidth ?? Int(photo.image.size.width),
                                             height: photo.asset?.pixelHeight ?? Int(photo.image.size.height),
-                                            filename: photoFilename
+                                            filename: photoFilename,
+                                            size: size
                                         )
                                         pickResultList.append(pickResult.toMap())
                                     }
@@ -223,7 +230,6 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                     } else if photo.asset == nil {
                         dispatchGroup.leave()
                     } else {
-                        
                         photo.asset!.getURL(completionHandler: { (responseURL: URL?) in
                             if let url = responseURL {
                                 var photoPath: String
@@ -241,20 +247,27 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                     width = Int(photo.image.size.width)
                                     height = Int(photo.image.size.height)
                                 }
-                               var photoFilename: String
-                                
+                                var photoFilename: String
+
                                 if let filename = photo.asset?.originalFilename {
                                     photoFilename = filename
 
                                 } else {
                                     photoFilename = url.lastPathComponent
                                 }
+                                // 使用 PHAssetResource 来获取文件大小
+                                let resources = PHAssetResource.assetResources(for: photo.asset!)
+                                var size = 0
+                                if let resource = resources.first {
+                                    size = resource.value(forKey: "fileSize") as? Int ?? 0
+                                }
                                 let pickResult = PhotoPickResult(
                                     id: photo.asset!.localIdentifier,
                                     path: photoPath,
                                     width: width,
                                     height: height,
-                                    filename: photoFilename
+                                    filename: photoFilename,
+                                    size: size
                                 )
 
                                 print("📷 pickResult:\(String(describing: pickResult))")
@@ -448,6 +461,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                 videoFilename = video.url.lastPathComponent
                             }
 
+                            let fileSize = (try? FileManager.default.attributesOfItem(atPath: videoPath)[.size] as? Int) ?? 0
+
                             videoResult = VideoPickResult(
                                 videoPath: videoPath,
                                 videoFilename: videoFilename,
@@ -455,7 +470,8 @@ public class KangImagePickerPlugin: NSObject, FlutterPlugin, YPImagePickerDelega
                                 thumbnailPath: result.0,
                                 thumbnailFilename: result.1,
                                 thumbnailWidth: result.2,
-                                thumbnailHeight: result.3
+                                thumbnailHeight: result.3,
+                                size: fileSize
                             )
                             resultFilePathList.append(videoResult.toMap())
                             dispatchGroup.leave()

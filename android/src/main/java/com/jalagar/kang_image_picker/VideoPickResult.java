@@ -14,6 +14,8 @@ public class VideoPickResult {
     private int thumbnailWidth;
     private int thumbnailHeight;
 
+    private Long size;
+
     public String getVideoPath() {
         return videoPath;
     }
@@ -70,6 +72,14 @@ public class VideoPickResult {
         this.thumbnailHeight = thumbnailHeight;
     }
 
+    public Long getSize() {
+        return size;
+    }
+
+    public void setSize(Long size) {
+        this.size = size;
+    }
+
     public Map<String, Object> toMap() {
         return new HashMap<String, Object>() {
             {
@@ -80,6 +90,7 @@ public class VideoPickResult {
                 put("thumbnailWidth", thumbnailWidth);
                 put("thumbnailHeight", thumbnailHeight);
                 put("duration", duration);
+                put("size", size);
             }
         };
     }

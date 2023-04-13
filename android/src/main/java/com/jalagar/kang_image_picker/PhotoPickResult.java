@@ -11,6 +11,8 @@ public class PhotoPickResult {
     private String filename;
     private String mimeType;
 
+    private Long size;
+
     public String getId() {
         return id;
     }
@@ -59,6 +61,14 @@ public class PhotoPickResult {
         this.mimeType = mimeType;
     }
 
+    public Long getSize() {
+        return size;
+    }
+
+    public void setSize(Long size) {
+        this.size = size;
+    }
+
     public Map<String, Object> toMap() {
         return new HashMap<String, Object>() {
             {
@@ -68,6 +78,7 @@ public class PhotoPickResult {
                 put("height", height);
                 put("filename", filename);
                 put("mimeType", mimeType);
+                put("size", size);
             }
         };
     }
