@@ -37,6 +37,7 @@ class VideoPickResult {
         'thumbnailWidth': thumbnailWidth,
         'thumbnailHeight': thumbnailHeight,
         'duration': duration,
+        'size': size,
       };
 
   @override
